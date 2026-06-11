@@ -1,0 +1,294 @@
+/* Base Styles and Resets */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background-color: #f1f1f1;
+    display: flex;
+    justify-content: center;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 30rem;
+    background-color: #ffffff;
+    min-height: 100vh;
+    padding-bottom: 5rem; /* Space for navbar */
+    position: relative;
+    box-shadow: 0 0 0.625rem rgba(0,0,0,0.1);
+}
+
+/* Header Section */
+.profile-header {
+    background: linear-gradient(to bottom, #d63031, #6c5ce7);
+    color: #ffffff;
+    text-align: center;
+    padding: 1.875rem 1.25rem;
+    border-bottom-left-radius: 1.25rem;
+    border-bottom-right-radius: 1.25rem;
+}
+
+.profile-header {
+    background: linear-gradient(to bottom, #d63031, #6c5ce7);
+    color: #ffffff;
+    text-align: center;
+    padding: 1.875rem 1.25rem;
+    border-bottom-left-radius: 1.25rem;
+    border-bottom-right-radius: 1.25rem;
+    position: relative; /* <-- यह लाइन जोड़ें */
+}
+
+
+.user-avatar {
+    width: 6rem; /* फोटो का साइज */
+    height: 6rem;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.2rem solid rgba(255, 255, 255, 0.3);
+}
+
+#user-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+.shop-name {
+    font-size: 1.375rem;
+    margin-bottom: 0.312rem;
+}
+
+.rating-badge {
+    display: inline-block;
+    background-color: rgba(0,0,0,0.5);
+    padding: 0.312rem 0.937rem;
+    border-radius: 0.937rem;
+    font-size: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.status-boxes {
+    display: flex;
+    justify-content: space-around;
+}
+
+.box {
+    background-color: rgba(255,255,255,0.2);
+    padding: 0.625rem;
+    border-radius: 0.5rem;
+    font-size: 0.987rem;
+    width: 30%;
+}
+
+.number {
+    font-size: 1.125rem;
+    font-weight: bold;
+}
+
+/* Menu Section */
+.action-menu {
+    padding: 1.25rem;
+}
+
+.menu-item {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    border: 0.062rem solid #e0e0e0;
+    padding: 0.937rem;
+    margin-bottom: 0.625rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: .95rem;
+    color: #333;
+}
+
+.menu-item span i {
+    color: #6c5ce7;
+    margin-right: 0.625rem;
+}
+
+.menu-item.alt-color {
+    background-color: #6c5ce7;
+    color: #ffffff;
+}
+
+.menu-item.alt-color span i {
+    color: #ffffff;
+}
+
+.badge {
+    background-color: #e17055;
+    color: #ffffff;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.625rem;
+    font-size: 0.625rem;
+}
+
+.exit-btn {
+    width: 100%;
+    background-color: #e17055;
+    color: #ffffff;
+    border: none;
+    padding: 0.937rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    margin-top: 0.937rem;
+    cursor: pointer;
+}
+
+/* Footer Navigation */
+.footer-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 32rem;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.937rem;
+    gap: 0.5rem;
+    border-top: 0.062rem solid #e0e0e0;
+    box-shadow: 0 -0.125 0.312rem rgba(0,0,0,0.05);
+}
+
+/* Home Button */
+.nav-btn.home-btn {
+    background-color: #1b5e20;
+    padding: 1rem; 
+    border-radius: 0.225rem;
+    color: white;
+    border: none;      /* इससे काला बॉर्डर हट जाएगा */
+    width: 8rem; /* यहाँ से आप चौड़ाई बढ़ा सकते हैं */
+    cursor: pointer;
+}
+
+/* Add Button */
+.nav-btn.add-btn {
+    background-color: #0277bd;
+    padding: 0.8rem;
+    border-radius: 0.225rem;
+    color: white;
+    border: none;      /* बॉर्डर हटाया */
+    width: 7rem;       /* चौड़ाई बढ़ाई */
+    cursor: pointer;
+}
+
+/* Account Button */
+.nav-btn.account-btn {
+    background-color: #ef6c00;
+    padding: 0.8rem;
+    border-radius: 0.225rem;
+    color: white;
+    border: none;      /* बॉर्डर हटाया */
+    width: 9rem;       /* चौड़ाई बढ़ाई */
+    cursor: pointer;
+}
+
+
+/* बटन पर माउस ले जाने पर चमक (Optional) */
+.nav-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+    transition: 0.3s;
+}
+
+/* Toggle Switch Styling (Updated) */
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute; 
+  cursor: pointer; 
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc; 
+  transition: .4s; 
+  border-radius: 2.125rem;
+}
+
+/* गोले का साइज़ 26px से घटाकर 20px किया ताकि बटन स्लिम लगे */
+.slider:before {
+  position: absolute; 
+  content: ""; 
+  height: 1.25rem; 
+  width: 1.25rem; 
+  left: 0.25rem; 
+  bottom: 0.25rem;
+  background-color: white; 
+  transition: .4s; 
+  border-radius: 50%;
+}
+
+input:checked + .slider { 
+    background-color: #2e7d32; 
+}
+
+/* गोला अब 22px ही आगे खिसकेगा ताकि बटन के अंदर रहे */
+input:checked + .slider:before { 
+    transform: translateX(1.375rem); 
+}
+
+/* दुकान स्टेटस वाले बॉक्स की सेटिंग */
+.store-status-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.937rem;
+    background: #fff;
+    border: 0.125rem solid #e0e0e0; /* यहाँ से बॉर्डर गहरा या हल्का कर सकते हैं */
+    border-radius: 0.75rem;
+    margin: 0.625rem 1.25rem; /* पहला नंबर (10) ऊपर-नीचे के लिए, दूसरा (20) दाएँ-बाएँ के लिए */
+}
+
+/* हिंदी और इंग्लिश टेक्स्ट का मार्जिन */
+.status-text-group {
+    margin-left: 0.937rem; 
+}
+
+/* टॉगल बटन का दाईं तरफ से मार्जिन (इसे आप यहाँ से कंट्रोल करें) */
+.toggle-wrapper {
+    margin-right: 1.5675rem; /* बटन को और अंदर लाने के लिए इसे बढ़ा दें (जैसे 30px) */
+}
+
+.issue-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 1.125rem 0.937rem;
+    border-bottom: 0.062rem solid #eee;
+    color: #333;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.issue-line:last-child { border-bottom: none; }
+.issue-line span {
+    background: #6c5ce7;
+    color: white;
+    padding: 0.125rem 0.625rem;
+    border-radius: 0.625rem;
+    font-size: 0.75rem;
+}
+/* Overlay System - Isse list button ke upar tairigi */
+.overlay-list {
+    position: absolute; /* हवा में तैराने के लिए */
+    top: 100%;         /* हेडर के ठीक नीचे से शुरू होगा */
+    left: 1.25rem;
+    right: 1.25rem;
+    background: white;
+    z-index: 1000;     /* सबसे ऊपर दिखने के लिए */
+    border-radius: 0.625rem;
+    border: 0.062rem solid #ddd;
+    box-shadow: 0rem 0.5rem 1.25rem rgba(0,0,0,0.2); /* साया (Shadow) */
+    text-align: left;
+}

@@ -1,0 +1,39 @@
+body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+
+.search-container { background: white; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.search-box { display: flex; align-items: center; background: #f1f1f1; padding: 10px; border-radius: 30px; }
+.camera-icon { margin-left: 10px; color: #555; }
+input { border: none; background: none; width: 100%; margin: 0 10px; outline: none; }
+.search-btn { background: #2e7d32; color: white; border: none; padding: 8px 20px; border-radius: 20px; }
+
+/* कार्ड्स एक के नीचे एक आएंगे */
+.container { padding: 15px; display: flex; flex-direction: column; gap: 20px; }
+
+.store-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.store-top { display: flex; align-items: center; gap: 15px; }
+.store-img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
+.store-name { font-size: 16px; font-weight: bold; }
+.badge { background: #e8f5e9; color: #2e7d32; font-size: 10px; padding: 2px 5px; border-radius: 4px; }
+.distance { font-weight: 800; font-size: 18px; color: #2e7d32; }
+
+/* 4 प्रोडक्ट वाला सेक्शन */
+.deal-stats { display: flex; justify-content: space-around; background: #fdfdfd; border: 1px dashed #ccc; padding: 10px; border-radius: 8px; margin: 15px 0; }
+.line { border-left: 1px solid #ccc; }
+/* आइटम रो की पैडिंग कम करो ताकि कार्ड पतला दिखे */
+.item-row { 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 5px 0; /* 8px से घटाकर 5px किया */
+    font-size: 13px; 
+    border-bottom: 1px solid #eee; 
+}
+
+/* डील स्टेट्स का मार्जिन कम करो */
+.deal-stats { 
+    margin: 10px 0; /* 15px से घटाकर 10px किया */
+}
+
+
+/* बटन डिज़ाइन */
+.view-all { width: 100%; background: #f0f0ff; color: #6c5ce7; border: none; padding: 10px; margin-top: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+.map-btn { width: 100%; background: #007bff; color: white; border: none; padding: 12px; margin-top: 15px; border-radius: 25px; font-weight: bold; cursor: pointer; }

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASTA STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<div id="msg-btn" onclick="toggleMsgBox()">
+    <i class="fa fa-pencil"></i>
+</div>
+
+<div id="msg-container" style="display:none;">
+    <div class="sasta-header">
+        <button onclick="toggleMsgBox()" class="back-circle">←</button>
+        <h1 class="sasta-logo">write text (1000)</h1>
+    </div>
+    
+    <div class="sasta-body">
+        <h2 class="watt-text">write....</h2>
+        <textarea id="user-msg" maxlength="1000" placeholder=" "></textarea>
+    </div>
+
+    <div class="sasta-footer" onclick="bhejoMessage()">
+        <div class="footer-box">
+            <i class="fa fa-bars"></i>
+            <span class="footer-txt">send feedback</span>
+            <i class="fa fa-paper-plane"></i>
+        </div>
+    </div>
+</div>
+
+
+<body>
+  <div id="app-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 99999; flex-direction: column; align-items: center; justify-content: center;">
+    
+    <div class="spinner" style="width: 3.5rem; height: 3.5rem; border: 0.35rem solid #f3f3f3; border-top: 0.35rem solid #2e7d32; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    
+    <p style="margin-top: 1.2rem; font-weight: bold; color: #2e7d32; font-size: 1.1rem; font-family: sans-serif; text-align: center;">
+        Sasta Store <br> 
+        <span style="font-weight: normal; font-size: 0.9rem;">Connecting to Database...</span>
+    </p>
+</div>
+
+<style>
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+</style>
+
+  
+    <header class="top-header">
+        <div class="logo-area">
+            <h1 class="main-logo">SASTA STORE <i class=""></i></h1> <p class="tagline">📍 Best Deals Near You</p>
+        </div>
+
+        <div class="location-bar">
+            <div class="loc-left">
+                <i class=""></i> <span class="loc-text">Your Location: <b>Janakpuri, Delhi</b></span>
+            </div>
+            <button class="change-btn">on</button>
+        </div>
+
+       <div class="search-container" id="search-box">
+    
+    <input type="text" id="input-khoj" placeholder="Search for Products..." onfocus="pardaOn()">
+    <button class="list-btn" onclick="listKhulegi()"><i class="fa-solid fa-list-check"></i></button>
+</div>
+
+<div id="safed-parda" style="display:none;">
+    <button onclick="pardaOff()" style="margin:10px; border:none; background:none; font-size:20px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    <div style="padding:20px; color:#888;"></div>
+</div>
+
+    </header>
+<section class="categories">
+    <div class="category-item" onclick="sortProductsByCategory('Sweets')">
+        <div class="icon-box"><img src="sweets.jpg" style="width: 100%;"></div> <span>Sweets</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Grocery')">
+        <div class="icon-box"><img src="groceries.jpg" style="width: 100%;"></div> <span>Grocery</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Fertilizers')">
+        <div class="icon-box"><img src="fertilizer.jpg" style="width: 100%;"></div> <span>Fertilizers</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Cycles')">
+        <div class="icon-box"><img src="cycle.jpg" style="width: 100%;"></div> <span>Cycles</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Bikes')">
+        <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Bikes</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Bikes')">
+        <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Fashion</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Bikes')">
+        <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Mobile</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Bikes')">
+        <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Medical</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Bikes')">
+        <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Books</span>
+    </div>
+    
+    <div class="category-item" onclick="sortProductsByCategory('Bikes')">
+        <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Electronic</span>
+    </div>
+</section>
+
+
+<section class="product-list">
+    <div class="product-card">
+        <img src="rasgulla.jpg" alt="Chana Dal">
+        <div class="product-info">
+            <h3 class="product-name">rasgulla (1kg)</h3>
+            <span class="product-price">₹800.00</span>
+            <span class="store-name">pappu mistan</span>
+            <span class="distance">1.5 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+
+    <div class="product-card">
+        <img src="Chana.jpg" alt="Moong Dal">
+        <div class="product-info">
+            <h3 class="product-name"> chana dal (1kg)</h3>
+            <span class="product-price">₹11.00</span>
+            <span class="store-name">gupta store</span>
+            <span class="distance">0.8 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+</section>
+<div class="sasta-ad">Ad</div>
+
+
+<section class="product-list">
+    <div class="product-card">
+        <img src="rasgulla.jpg" alt="Chana Dal">
+        <div class="product-info">
+            <h3 class="product-name">rasgulla (1kg)</h3>
+            <span class="product-price">₹80.00</span>
+            <span class="store-name">pappu mistan</span>
+            <span class="distance">1.5 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+
+    <div class="product-card">
+        <img src="Chana.jpg" alt="Moong Dal">
+        <div class="product-info">
+            <h3 class="product-name"> chana dal (1kg)</h3>
+            <span class="product-price">₹110.00</span>
+            <span class="store-name">gupta store</span>
+            <span class="distance">0.8 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+</section>
+<div class="sasta-ad">Ad</div>
+
+<section class="product-list">
+    <div class="product-card">
+        <img src="rasgulla.jpg" alt="Chana Dal">
+        <div class="product-info">
+            <h3 class="product-name">rasgulla (1kg)</h3>
+            <span class="product-price">₹80.00</span>
+            <span class="store-name">pappu mistan</span>
+            <span class="distance">1.5 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+
+    <div class="product-card">
+        <img src="Chana.jpg" alt="Moong Dal">
+        <div class="product-info">
+            <h3 class="product-name"> chana dal (1kg)</h3>
+            <span class="product-price">₹110.00</span>
+            <span class="store-name">gupta store</span>
+            <span class="distance">0.8 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+</section>
+
+<div class="sasta-ad">Ad</div>
+
+<section class="product-list">
+    <div class="product-card">
+        <img src="rasgulla.jpg" alt="Chana Dal">
+        <div class="product-info">
+            <h3 class="product-name">rasgulla (1kg)</h3>
+            <span class="product-price">₹80.00</span>
+            <span class="store-name">pappu mistan</span>
+            <span class="distance">1.5 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+
+    <div class="product-card">
+        <img src="Chana.jpg" alt="Moong Dal">
+        <div class="product-info">
+            <h3 class="product-name"> chana dal (1kg)</h3>
+            <span class="product-price">₹110.00</span>
+            <span class="store-name">gupta store</span>
+            <span class="distance">0.8 km</span>
+            <a href="#" class="map-btn">Map on </a>
+        </div>
+    </div>
+</section>
+
+
+    <footer class="bottom-nav">
+        <button class="nav-btn compare" id="home-btn">
+            <i class=""></i> HOME 
+        </button>
+        <button class="nav-btn add-btn" onclick="openAddProductPage()">ADD</button>
+
+        <button class="nav-btn call" id="account-btn">
+            <i class=""></i> ACCOUNT 
+        </button>
+        
+    </footer>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="database.js"></script>
+<script src="profiledata.js"></script>
+
+<script>
+  // 1. सबसे पहले लोडर को पूरी तरह बंद (hide) ही कर दो, हमें इसकी ज़रूरत नहीं है
+  const appLoader = document.getElementById('app-loader');
+  if (appLoader) appLoader.style.display = 'none';
+
+  // 2. फ़ायरबेस का असली चेक
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+      // अगर यूज़र लॉग इन नहीं है, तो सीधे लॉगिन पेज पर भेज दो
+     //  window.location.href = "singing.html";
+    } else {
+      // अगर लॉग इन हो गया है, तो कंसोल में उसका ईमेल प्रिंट करो (चेक करने के लिए)
+      console.log("भाई लॉग इन हो गया!", user.email);
+      
+      // आप चाहो तो यहाँ 'Your Location' या किसी और जगह यूज़र का नाम भी दिखा सकते हो
+      // उदाहरण के लिए: 
+      // document.querySelector('.loc-text').innerHTML = `Welcome, <b>${user.displayName || 'User'}</b>`;
+    }
+  });
+</script>
+
+
+
+
+
+<script src="script.js"></script>
+<script src="location.js"></script>
+<script src="algocategory.js"></script>
+<script src="customer.js"></script>
+
+
+
+</body>
+</html>
+

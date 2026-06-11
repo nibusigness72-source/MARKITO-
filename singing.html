@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasta Store - Login</title>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            max-width: 350px;
+            width: 100%;
+        }
+        .welcome-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .store-name {
+            font-size: 20px;
+            color: #ff4747; /* आपका लाल रंग */
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .google-btn img {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+        }
+        .google-btn:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="welcome-text">WELCOME TO</div>
+        <div class="store-name">SASTA STORE</div>
+        
+        <button class="google-btn" id="googleLoginBtn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
+            Sign in with Google
+        </button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script src="database.js"></script>
+
+    <script>
+    // जब यूज़र लॉगिन बटन पर क्लिक करे
+    document.getElementById('googleLoginBtn').addEventListener('click', () => {
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        
+        // POPUP का इस्तेमाल करें, यह रीडायरेक्ट लूप को तुरंत तोड़ देता है
+        firebase.auth().signInWithPopup(googleProvider)
+        .then((result) => {
+            const user = result.user;
+            console.log("लॉगिन सफल:", user.displayName);
+            
+            // सीधे होम पेज पर भेजें
+            window.location.href = "index.html"; 
+        })
+        .catch((error) => {
+            console.error("लॉगिन में गड़बड़:", error.message);
+            alert("लॉगिन नहीं हो सका! " + error.message);
+        });
+    });
+
+    // अगर यूज़र पहले से लॉग इन है, तो उसे सीधे होम पेज पर भेज दो
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            window.location.href = "index.html";
+        }
+    });
+</script>
+
+
+</body>
+</html>

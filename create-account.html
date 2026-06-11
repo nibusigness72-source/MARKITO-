@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>रजिस्ट्रेशन | सस्ता स्टोर</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="create-account.css">
+</head>
+<body>
+
+    <div class="reg-container">
+        <h1 class="form-title">दुकान का रजिस्ट्रेशन</h1>
+
+        <form id="accountForm">
+            <div class="input-box">
+                <i class="fas fa-store icon-blue"></i>
+                <input type="text" id="shopName" placeholder="दुकान का नाम | Shop Name" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fas fa-user icon-green"></i>
+                <input type="text" id="ownerName" placeholder="आपका नाम | Your Name" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fas fa-phone-alt icon-orange"></i>
+                <input type="tel" id="userPhone" placeholder="मोबाइल नंबर | Mobile (Optional)">
+            </div>
+
+            <div class="input-box">
+                <i class="fab fa-whatsapp icon-whatsapp"></i>
+                <input type="tel" id="whatsappPhone" placeholder="WhatsApp (Optional)">
+            </div>
+
+            <div class="input-box">
+                <i class="fas fa-map-marker-alt icon-red"></i>
+                <textarea id="shopAddress" placeholder="दुकान का पता | Shop Address" required></textarea>
+            </div>
+
+            <button type="button" class="location-btn">
+                <i class="fas fa-location-crosshairs"></i> Shop Location Set करें
+            </button>
+
+            <p class="section-label">दुकान की फोटो अपलोड करें:</p>
+            <div class="photo-grid">
+                <div class="photo-box"><i class="fas fa-plus-circle"></i></div>
+                <div class="photo-box"><i class="fas fa-plus-circle"></i></div>
+                <div class="photo-box"><i class="fas fa-plus-circle"></i></div>
+                <div class="photo-box"><i class="fas fa-plus-circle"></i></div>
+            </div>
+
+            <p class="section-label">दुकान का समय (Timing):</p>
+            <div class="time-grid">
+                <div class="time-input">
+                    <span>खुलेगा (Open)</span>
+                    <input type="time" id="openTime" value="09:00">
+                </div>
+                <div class="time-input">
+                    <span>बंद होगा (Close)</span>
+                    <input type="time" id="closeTime" value="21:00">
+                </div>
+            </div>
+        <input type="file" id="shopPhotos" accept="image/*" multiple style="display: none;">
+
+            <button type="submit" class="submit-btn">SAVE</button>
+        </form>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+
+<script src="database.js"></script>
+<script src="script.js"></script>
+<script src="location.js"></script>
+
+</body>
+</html>

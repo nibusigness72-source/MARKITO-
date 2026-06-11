@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="account.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* लेआउट को फोटो के जैसा बनाने के लिए */
+        .highlight-item {
+            display: flex; /* फोटो राइट, टेक्स्ट लेफ्ट */
+            flex-direction: row-reverse; 
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 0.625rem 1.25rem;
+            border-bottom: 0.125rem solid #f4f4f4;
+            
+            
+            
+        }
+        .h-img-box { width: 45%; }
+        .h-img-box img { width: 100%; border-radius: 0.625rem; }
+        .h-info-box { width: 50%; text-align: left; }
+        .h-name { font-size: 1.25rem; font-weight: bold; margin: 0; }
+        .h-price { color: #d35400; font-size: 18px; font-weight: bold; margin: 0.312rem 0; }
+        
+        /* 4 आइटम ग्रिड सेटिंग */
+.product-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem; /* 8px approx */
+    padding: 0.625rem;
+}
+
+/* प्रोडक्ट कार्ड का साइज - हाइट को 17rem किया ताकि बटन फिट रहे */
+.product-card { 
+    height: auto !important; 
+    min-height: 17rem !important; 
+    background: white;
+    border-radius: 0.625rem;
+    padding: 0.625rem;
+    box-shadow: 0 0.125rem 0.312rem rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* इमेज साइज फिक्स */
+.product-card img { 
+    width: 100%; 
+    height: 6.5rem; 
+    object-fit: contain; 
+}
+
+/* फोन और व्हाट्सएप लोगो साइज फिक्स (Rem में) */
+.contact-actions { 
+    display: flex; 
+    justify-content: center; 
+    gap: 2rem; 
+    padding: 1rem 0; 
+}
+
+.contact-actions img { 
+    width: 2.812rem !important; /* 45px approx */
+    height: 2.812rem !important; 
+    object-fit: contain;
+}
+
+/* टेक्स्ट और मेटा डेटा (दुकान/दूरी) */
+.product-info h3 { font-size: 0.937rem; margin: 0.312rem 0; }
+.product-info span { font-size: 0.875rem; color: #d35400; font-weight: bold; display: block; }
+
+.product-meta, .product-meta-box { 
+    font-size: 0.75rem; 
+    color: #777; 
+    line-height: 1.1rem;
+    margin: 0.25rem 0;
+}
+
+/* मैप बटन स्टाइल */
+.map-btn {
+    background: #4a90e2;
+    color: white;
+    text-decoration: none;
+    padding: 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    text-align: center;
+    display: block;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <header class="profile-header">
+            <div class="top-nav" style="display: flex; justify-content: space-between; padding: 0 0.625rem;">
+                <i class="fas fa-arrow-left" onclick="window.history.back()"></i>
+                <div class="rating-badge">REVIEWS</div>
+            </div>
+         <div class="user-avatar" id="profile-avatar-container"><i class="fas fa-user-circle" style="font-size: 3.5rem; color: #ccc;"></i></div>
+
+<h1 class="shop-name">STORE NAME</h1>
+
+
+            <div class="status-boxes">
+                <div class="box" id="btn-good" onclick="selectRating('good')">
+                    <span class="number" id="count-good">0</span><br>GOOD
+                </div>
+                <div class="box" id="btn-best" onclick="selectRating('best')">
+                    <span class="number" id="count-best">0</span><br>BEST
+                </div>
+                <div class="box" id="btn-issue" onclick="toggleIssueList()" style="background: #e17055;">
+                    <span class="number" id="count-issue">0</span><br>ISSUE
+                </div>
+            </div>
+
+            <div id="my-issue-list" class="overlay-list" style="display: none;">
+                <div class="issue-line" onclick="selectIssue('i1')">Price Jyada Hai <span id="i1">0</span></div>
+                <div class="issue-line" onclick="selectIssue('i2')">Saman Nahi Mila <span id="i2">0</span></div>
+                <div class="issue-line" onclick="selectIssue('i3')">Quality Acchi Nahi <span id="i3">0</span></div>
+                <div class="issue-line" onclick="selectIssue('i4')">Location Galat Tha <span id="i4">0</span></div>
+                <div class="issue-line" onclick="selectIssue('i5')">Behaviour Accha Nahi <span id="i5">0</span></div>
+                <div class="issue-line" onclick="selectIssue('i6')">Other Issue <span id="i6">0</span></div>
+            </div>
+        </header>
+
+        <div class="highlight-item">
+            <div class="h-img-box"><img src="rasgulla.jpg"></div>
+            <div class="h-info-box">
+                <p class="h-name">rasgulla (1kg)</p>
+                <p class="h-price">₹800.00</p>
+                <p style="font-size:0.75rem; color:#777; margin-bottom:0.625rem;">pappu mistan | 1.5 km</p>
+                <a href="#" class="map-btn">Map on</a>
+            </div>
+        </div>
+        <button id="sasta_toggle_btn" onclick="toggleSastaDetails()" 
+        style="width: 100%; padding: 12px; margin: 10px 0; background: #4285f4; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+    View Product
+</button>
+
+<div id="sasta_details_box" style="display: none; padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 20px; background: #fff;">
+    
+    <div style="margin-bottom: 15px;">
+        <h4 style="margin: 0 0 5px 0;">Brand</h4>
+        <p id="sasta_disp_brand" style="color: #555; margin: 0;">--</p>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <h4 style="margin: 0 0 5px 0;">Description</h4>
+        <p id="sasta_disp_desc" style="color: #555; margin: 0; line-height: 1.4;">--</p>
+    </div>
+    
+    <h4 style="margin: 10px 0;">More Photos</h4>
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;">
+        <script>
+            for(let i=1; i<=10; i++) {
+                document.write(`<div id="photo-${i}" style="width:100%; aspect-ratio:1/1; border:1px solid #eee; display:flex; align-items:center; justify-content:center; background:#f9f9f9; font-size:10px; color:#ccc;">IMG ${i}</div>`);
+            }
+        </script>
+    </div>
+</div>
+
+        
+
+        <div class="contact-actions">
+            <a href="tel:91XXX"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></a>
+            <a href="https://wa.me/91XXX"><img src="https://cdn-icons-png.flaticon.com/512/733/733585.png"></a>
+        </div>
+
+        <section class="product-list">
+            <div class="product-card"><img src="rasgulla.jpg"><div class="product-info"><h3>rasgulla</h3><span>₹800</span><div class="product-meta-box">
+    pappu mistan |<br>
+    <span class="km-text">1.5 km</span>
+</div>
+<a href="#" class="map-btn">Map on</a></div></div>
+            <div class="product-card"><img src="Chana.jpg"><div class="product-info"><h3>chana dal</h3><span>₹11</span><div class="product-meta">gupta store | <br>0.8 km</div>
+<a href="#" class="map-btn">Map on</a></div></div>
+            <div class="product-card"><img src="rasgulla.jpg"><div class="product-info"><h3>rasgulla</h3><span>₹80</span><div class="product-meta">pappu mistan |<br> 1.5 km</div>
+<a href="#" class="map-btn">Map on</a></div></div>
+            <div class="product-card"><img src="Chana.jpg"><div class="product-info"><h3>chana dal</h3><span>₹110</span><div class="product-meta">gupta store |<br> 0.8 km</div>
+<a href="#" class="map-btn">Map on</a></div></div>
+        </section>
+    </div>
+
+      <script>
+        function resetCounts() {
+            document.getElementById('count-good').innerText = "0";
+            document.getElementById('count-best').innerText = "0";
+            document.getElementById('count-issue').innerText = "0";
+            for(let i=1; i<=6; i++) { document.getElementById('i'+i).innerText = "0"; }
+        }
+
+        function selectRating(type) {
+            resetCounts();
+            document.getElementById('count-' + type).innerText = "1";
+            document.getElementById('my-issue-list').style.display = "none";
+        }
+
+        function toggleIssueList() {
+            var x = document.getElementById("my-issue-list");
+            x.style.display = (x.style.display === "none") ? "block" : "none";
+        }
+
+function selectIssue(id) {
+            resetCounts();
+            document.getElementById('count-issue').innerText = "1";
+            document.getElementById(id).innerText = "1";
+            setTimeout(() => { document.getElementById('my-issue-list').style.display = "none"; }, 500);
+        }
+        
+    </script> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script src="database.js"></script>
+     <script src="profiledata.js"></script>
+    <script src="script.js"></script>
+    <script src="location.js"></script>
+   
+
+
+
+</body>
+</html>

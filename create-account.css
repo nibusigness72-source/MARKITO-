@@ -1,0 +1,184 @@
+/* 1. बेसिक मोबाइल सेटअप - कोई स्क्रॉल न दिखे */
+* { 
+    box-sizing: border-box; 
+    font-family: 'Poppins', sans-serif; 
+}
+
+body { 
+    /* ज़्यादा चमकदार मोबाइल ग्रेडिएंट */
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+    margin: 0; 
+    padding: 0; /* मोबाइल के किनारे से चिपकाने के लिए padding 0 */
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* 2. मुख्य डिब्बा - स्क्रीन पर कैसे दिखेगा */
+.reg-container {
+    background: #ffffff; 
+    width: 100%; 
+    max-width: 26.25rem; /* मोबाइल स्क्रीन की सामान्य चौड़ाई */
+    padding: 1.25rem; /* डिब्बे के अंदर थोड़ा स्पेस, पर किनारे से चिपका हुआ */
+    border-radius: 1.25rem; /* मोबाइल स्क्रीन के कोनों जैसा */
+    box-shadow: 0 0.937rem 2.1875rem rgba(0,0,0,0.3);
+    margin: 0.625rem; /* अगर ब्राउज़र में चलाएं तो थोड़ा मार्जिन दिखे */
+}
+
+/* 3. हेडिंग को थोड़ा और बोल्ड और क्लीन लुक */
+.form-title { 
+    font-size: 1.375rem; 
+    color: #333; 
+    margin-bottom: 1.25rem; 
+    font-weight: 900; 
+    border-left: 0.312rem solid #2a5298; /* हेडिंग के साइड में रंगीन लकीर */
+    padding-left: 0.625rem; 
+    letter-spacing: -0.031rem;
+}
+
+/* 4. इनपुट बॉक्स का नया मोबाइल स्टाइल */
+.input-box { 
+    position: relative; 
+    margin-bottom: 0.612rem; /* मोबाइल पर जगह कम रखने के लिए */
+}
+
+.input-box i { 
+    position: absolute; 
+    left: 0.937rem; 
+    top: 0.937rem; 
+    font-size: 1rem; 
+}
+
+/* 5. इनपुट आइकॉन के रंग - और भी गहरे */
+.icon-blue { color: #1e3c72; }
+.icon-green { color: #2e7d32; }
+.icon-orange { color: #f57c00; }
+.icon-whatsapp { color: #25d366; }
+.icon-red { color: #d32f2f; }
+
+/* 6. इनपुट डिब्बे - अब थोड़े पतले और क्लीन */
+.input-box input, .input-box textarea {
+    width: 100%; 
+    padding: 0.875rem 0.937rem 0.875rem 2.79rem; /* पतले इनपुट के लिए padding */
+    border: 0.062rem solid #e0e0e0; /* पतली बॉर्डर */
+    border-radius: 0.75rem; 
+    font-size: 0.85rem; 
+    background: #f9f9f9; 
+    outline: none; 
+    transition: 0.3s;
+}
+
+.input-box textarea {
+    height: 3.75rem; /* पते के लिए डिब्बा छोटा */
+    resize: none; /* फालतू स्क्रॉल न आए */
+}
+
+.input-box input:focus, .input-box textarea:focus { 
+    border-color: #2a5298; 
+    background: #fff; 
+}
+
+/* 7. लोकेशन बटन - अब पूरी चौड़ाई तक */
+.location-btn {
+    width: 100%; 
+    padding: 0.75rem; 
+    background: #e3f2fd; 
+    color: #1565c0;
+    border: 2px dashed #1565c0; 
+    border-radius: 0.75rem; 
+    font-weight: bold; 
+    margin-bottom: 0.937rem; 
+    cursor: pointer;
+    font-size: 0.79rem;
+}
+
+.section-label { 
+    font-weight: bold; 
+    font-size: 0.79rem; 
+    margin: 0.625rem 0 0.312rem 0; 
+    color: #555; 
+}
+
+/* 8. फोटो ग्रिड - मोबाइल स्क्रीन तक फैला हुआ */
+.photo-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 0.5rem; /* छोटे गैप */
+    margin-bottom: 0.937rem; 
+}
+
+.photo-box { 
+    height: 3.75rem; /* फोटो के डिब्बे थोड़े छोटे */
+    border: 0.125rem dashed #ddd; 
+    border-radius: 0.625rem; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #ccc; 
+    font-size: 1.125rem; 
+    cursor: pointer; 
+}
+
+.photo-box:hover { 
+    border-color: #2e7d32; 
+    color: #2e7d32; 
+    background: #e8f5e9; 
+}
+
+/* 9. समय वाला हिस्सा - और भी क्लीन */
+.time-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 0.625rem; 
+    margin-bottom: 1.25rem; 
+}
+
+.time-input { 
+    background: #f5f5f5; 
+    padding: 0.5rem; 
+    border-radius: 0.625rem; 
+    text-align: center; 
+    border: 0.062rem solid #e0e0e0;
+}
+
+.time-input span { 
+    display: block; 
+    font-size: 0.625rem; 
+    font-weight: bold; 
+    color: #757575; 
+    margin-bottom: 0.25rem; 
+}
+
+.time-input input { 
+    width: 100%; 
+    border: none; 
+    background: transparent; 
+    font-size: 0.937rem; 
+    font-weight: bold; 
+    color: #333; 
+    outline: none; 
+    cursor: pointer; 
+    text-align: center;
+}
+
+/* 10. सबमिट बटन - बोल्ड और प्रोफेशनल */
+.submit-btn {
+    width: 100%; 
+    padding: 0.937rem; 
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* बटन में भी ग्रेडिएंट */
+    color: #fff;
+    border: none; 
+    border-radius: 0.75rem; 
+    font-size: 0.937rem; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    box-shadow: 0 0.312rem 0.937rem rgba(0,0,0,0.2);
+    letter-spacing: 0.031rem;
+}
+
+.submit-btn:hover { 
+    transform: scale(1.01); 
+    box-shadow: 0 0.4375rem 1.25rem rgba(0,0,0,0.3);
+}

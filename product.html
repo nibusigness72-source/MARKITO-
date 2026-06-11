@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasta Store - Add Product</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="product.css">
+</head>
+<body>
+
+    <div class="header">
+        <button onclick="window.history.back()" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h3>Add Product</h3>
+    </div>
+
+    <div class="container">
+   <div class="upload-section" onclick="triggerProductPhotoUpload()" id="formPhotoPreview">
+    <div class="upload-box">
+        <i class="fa-solid fa-plus plus-icon"></i>
+        <p>Add Product</p>
+    </div>
+    <input type="file" id="fileInput" hidden accept="image/*">
+    <p class="hint">Tap on any box to add product photo</p>
+</div>
+
+        <form id="productForm">
+            <h4 class="section-title">Product Details</h4>
+
+            <div class="input-group">
+                <label>Product Name *</label>
+                <input type="text" id="pName" placeholder="Enter product name" required>
+            </div>
+
+            <div class="input-group">
+                <label>Category *</label>
+                <select id="pCategory">
+                    <option value="">Select category</option>
+                    <option value="Grocery">Grocery</option>
+                    <option value="Sweets">Sweets</option>
+                    <option value="Fertilizers">Fertilizers</option>
+                    <option value="Cycles">Cycles</option>
+                     <option value="Bikes">Bikes</option>
+                      <option value="Fashion">Fashion</option>
+                       <option value="Mobile">Mobile</option>
+                        <option value="Medical">Medical</option>
+                         <option value="Books">Books</option>
+                          <option value="Electronic">Electronic</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="input-group">
+                    <label>Price (₹) *</label>
+                    <input type="number" id="pPrice" placeholder="00" required>
+                </div>
+                <div class="input-group">
+                    <label>Unit *</label>
+                    <input type="text" id="pUnit" placeholder="e.g. 1kg" required>
+                </div>
+            </div>
+          <button type="button" onclick="toggleSastaDetails()" id="sasta_toggle_btn" class="toggle-btn" 
+        style="width: 100%; padding: 12px; margin: 10px 0; background: #4285f4; color: white; border: none; border-radius: 8px;">
+    + View Brand, Description & Photos
+</button>
+
+<div id="sasta_details_box" style="display:none; padding:15px; border:1px solid #ddd; border-radius:10px; margin-bottom:20px; background:#fff;">
+    <div class="input-group">
+        <label>Brand Name</label>
+        <input type="text" id="pBrand" placeholder="e.g. Bajaj, Patanjali">
+    </div>
+    <div class="input-group">
+        <label>Description</label>
+        <textarea id="pDesc" style="width:100%; height:80px;" placeholder="Add product details..."></textarea>
+    </div>
+   <label>More Photos</label>
+<div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; margin-top:5px;">
+    <div id="p-box-1" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(1)">1</div>
+    <div id="p-box-2" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(2)">2</div>
+    <div id="p-box-3" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(3)">3</div>
+    <div id="p-box-4" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(4)">4</div>
+    <div id="p-box-5" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(5)">5</div>
+    <div id="p-box-6" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(6)">6</div>
+    <div id="p-box-7" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(7)">7</div>
+    <div id="p-box-8" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(8)">8</div>
+    <div id="p-box-9" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(9)">9</div>
+    <div id="p-box-10" style="border:1px dashed #ccc; padding:10px; text-align:center; cursor:pointer;" onclick="triggerProductPhotoUpload(10)">10</div>
+</div>
+
+</div>
+
+
+            
+
+          <div class="action-btns">
+    <button type="button" onclick="deleteProductFromDatabase()" class="btn-delete">DELETE</button>
+    <button type="button" onclick="submitProductToDatabase()" class="btn-edit">EDIT / UPDATE</button>
+</div>
+
+
+            <div class="footer-info">
+                <p class="last-update">Last update: <span id="autoDate">--/--/----</span></p>
+                
+                <div class="stock-options">
+                    <label class="radio-container">
+                        <input type="radio" name="stock" value="in" checked>
+                        <span class="checkmark"></span> In stock
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="stock" value="out">
+                        <span class="checkmark"></span> Out stock
+                    </label>
+                </div>
+            </div>
+<button type="button" onclick="submitProductToDatabase()" class="submit-btn">ADD PRODUCT</button>
+
+        </form>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="database.js"></script>
+<script src="script.js"></script>
+<script src="profiledata.js"></script>
+<script src="location.js"></script>
+
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const boxIndex = urlParams.get('box');
+    if (boxIndex !== null) {
+        // window. लगाकर इसे ग्लोबल बना दो ताकि prodata.js को ये तुरंत मिल जाए
+        window.currentSelectedBoxIndex = parseInt(boxIndex);
+        console.log("डिब्बा नंबर सेट हो गया: " + window.currentSelectedBoxIndex);
+    }
+</script>
+
+<script src="prodata.js"></script>
+
+
+
+</body>
+</html>
+

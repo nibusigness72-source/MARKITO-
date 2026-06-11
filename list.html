@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best Deals</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="list.css">
+</head>
+<body>
+
+<div class="search-container">
+    <div class="search-box" style="display: flex; flex-direction: column; padding: 10px; background: #fff; border-radius: 20px;">
+        <div id="tag-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 5px;"></div>
+        
+        <input type="text" id="mainSearch" placeholder="write products,click Enter/Comm..." 
+               style="border:none; outline:none; padding:8px; width:100%;">
+               <ul id="suggestion-list" style="list-style:none; padding:0; margin:0; border:1px solid #ddd; background:#fff;
+               margin-top:5rem;  margin-left:5rem; position:absolute; width:100%; z-index:1000; display:none;"></ul>
+
+    </div>
+    <button class="search-btn" onclick="startSearch()" style="width:100%; margin-top:5px;">SEARCH</button>
+</div>
+
+
+<div class="container">
+    <div class="store-card">
+        <div class="store-top">
+            <img src="img.png" class="store-img">
+            <div class="store-details">
+                <h2 class="store-name">Shailendra Store <span class="badge">CHEAPEST</span></h2>
+                <div class="distance">4.8 km</div>
+            </div>
+        </div>
+        <div class="deal-stats">
+            <div><small>Total Bill</small><br><strong>₹240</strong></div>
+            <div class="line"></div>
+            <div><small>Available</small><br><strong>6/25</strong></div>
+        </div>
+      <div class="items-list">
+    <div class="item-row"><span>Milk (1L)</span> <span>₹40</span></div>
+    
+    <div id="extra-items" style="display: none;">
+        <div class="item-row"><span>Sugar (1kg)</span> <span>₹42</span></div>
+        <div class="item-row"><span>Oil (1L)</span> <span>₹150</span></div>
+        <div class="item-row"><span>Dal (1kg)</span> <span>₹8</span></div>
+    </div>
+</div>
+
+<button class="view-all" onclick="toggleItems(this)">
+    View All Items <i class="fa-solid fa-chevron-down"></i>
+</button>
+
+        <button class="map-btn"><i class="fa-solid fa-location-dot"></i> MAP ON</button>
+    </div>
+</div>
+<div class="container">
+    <div class="store-card">
+        <div class="store-top">
+            <img src="img.png" class="store-img">
+            <div class="store-details">
+                <h2 class="store-name">Shailendra Store <span class="badge">CHEAPEST</span></h2>
+                <div class="distance">4.8 km</div>
+            </div>
+        </div>
+        <div class="deal-stats">
+            <div><small>Total Bill</small><br><strong>₹240</strong></div>
+            <div class="line"></div>
+            <div><small>Available</small><br><strong>6/25</strong></div>
+        </div>
+      <div class="items-list">
+    <div class="item-row"><span>Milk (1L)</span> <span>₹40</span></div>
+    
+    <div id="extra-items" style="display: none;">
+        <div class="item-row"><span>Sugar (1kg)</span> <span>₹42</span></div>
+        <div class="item-row"><span>Oil (1L)</span> <span>₹150</span></div>
+        <div class="item-row"><span>Dal (1kg)</span> <span>₹8</span></div>
+    </div>
+</div>
+
+<button class="view-all" onclick="toggleItems(this)">
+    View All Items <i class="fa-solid fa-chevron-down"></i>
+</button>
+
+        <button class="map-btn"><i class="fa-solid fa-location-dot"></i> MAP ON</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script src="database.js"></script>
+<script src="script.js"></script>
+<script src="location.js"></script>
+<script src="algocategory.js"></script>
+<script src="listdata.js"></script>
+
+
+</body>
+</html>

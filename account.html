@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Page</title>
+    <!-- Include Font Awesome Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="account.css">
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Top Profile Section -->
+        <header class="profile-header">
+        <div class="user-avatar" style="position: relative; cursor: pointer; width: 5.5rem; height: 5.5rem; border-radius: 50%; overflow: hidden;">
+    
+    <img id="user-photo" src="https://www.w3schools.com/howto/img_avatar.png" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+    
+    <input type="file" id="avatar-input" accept="image/*" onchange="uploadAvatar(event)" 
+           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 999;">
+</div>
+
+
+<h1 class="shop-name" id="user-name">STORE NAME</h1>
+
+            <div class="rating-badge">
+                <i class="fas fa-star"></i> REVIEWS
+            </div>
+<div class="status-boxes">
+    <div class="box" onclick="handleVote('count-good')">
+        <span class="number" id="count-good">0</span><br>GOOD
+    </div>
+    <div class="box" onclick="handleVote('count-best')">
+        <span class="number" id="count-best">0</span><br>BEST
+    </div>
+    <div class="box" onclick="toggleIssueList()" style="cursor: pointer; background: #e17055;">
+        <span class="number" id="count-issue">0</span><br>ISSUE
+    </div>
+</div>
+
+<div id="my-issue-list" class="overlay-list" style="display: none;">
+
+    <div class="issue-line" onclick="handleVote('i1', true)">Price Jyada Hai <span id="i1">0</span></div>
+    <div class="issue-line" onclick="handleVote('i2', true)">Saman Nahi Mila <span id="i2">0</span></div>
+    <div class="issue-line" onclick="handleVote('i3', true)">Quality Acchi Nahi <span id="i3">0</span></div>
+    <div class="issue-line" onclick="handleVote('i4', true)">Location Galat Tha <span id="i4">0</span></div>
+    <div class="issue-line" onclick="handleVote('i5', true)">Behaviour Accha Nahi <span id="i5">0</span></div>
+    <div class="issue-line" onclick="handleVote('i6', true)">Other Issue <span id="i6">0</span></div>
+   
+</div>
+
+
+            
+        </header>
+<div class="store-status-area" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: #fff; border-bottom: 0.125rem solid #f4f4f4; margin-bottom: 0.312rem;">
+    
+    <div style="text-align: left;">
+        <p id="status-hindi" style="margin: 0; font-size: 1rem; font-weight: 900; color: #2e7d32;">दुकान खुली है</p>
+        <p id="status-english" style="margin: 0; font-size: 0.687rem; color: #777; font-weight: bold;">Store is online</p>
+    </div>
+    
+    <label class="switch" style="position: relative; display: inline-block; width: 3.125rem; height: 1.75rem;">
+        <input type="checkbox" id="store-toggle" onchange="toggleStoreStatus()" checked>
+        <span class="slider round"></span>
+    </label>
+</div>
+
+        <!-- Menu Action Buttons -->
+        <main class="action-menu">
+            <button class="menu-item alt-color">
+                <span><i class="fas fa-plus-circle"></i>Create Account</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+            <button class="menu-item">
+                <span><i class="fas fa-sync-alt"></i>Switch Account</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+          <button class="menu-item" onclick="openAddProductPage()">
+    <span>
+        <i class="fas fa-cart-plus"></i>
+        Add Product
+    </span>
+    <span class="badge">1</span>
+</button>
+
+
+            <button class="menu-item">
+                <span><i class="fas fa-info-circle"></i>Details</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+            <!-- Logout Button -->
+            <button class="exit-btn">
+                <i class="fas fa-sign-out-alt"></i> LOGOUT
+            </button>
+        </main>
+<!-- Bottom Navigation Bar - Icons Removed -->
+<nav class="footer-nav">
+    <button class="nav-btn home-btn" onclick="location.href='index.html'">HOME</button>
+    <button class="nav-btn add-btn">ADD</button>
+    <button class="nav-btn account-btn active">ACCOUNT</button>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script src="database.js"></script>
+<script src="script.js"></script>
+<script src="prodata.js"></script>
+<script src="accountdata.js"></script>
+<script src="location.js"></script>
+</body>
+</html>
+
