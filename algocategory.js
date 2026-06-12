@@ -35,4 +35,4 @@ window.getSmartSort = function(products, userLat, userLon) {
 
     };
 
-
+    
