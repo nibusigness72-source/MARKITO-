@@ -349,3 +349,4 @@ firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/phot
         }
     }
 });
+                    
