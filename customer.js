@@ -263,6 +263,8 @@ filteredResults.sort((a, b) => {
     filteredResults.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
+productCard.setAttribute('data-storeid', product.storeId);
+productCard.setAttribute('data-prodname', product.productName);
 
         const googleMapUrl = `https://www.google.com/maps?q=${product.lat},${product.lon}`;
 
@@ -293,6 +295,8 @@ filteredResults.sort((a, b) => {
             if (matchedCategory !== "" && pCategory === matchedCategory) {
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card';
+productCard.setAttribute('data-storeid', product.storeId);
+productCard.setAttribute('data-prodname', product.productName);
 
                 const googleMapUrl = `https://www.google.com/maps?q=${product.lat},${product.lon}`;
 
@@ -323,6 +327,8 @@ filteredResults.sort((a, b) => {
             if (matchedCategory === "" || pCategory !== matchedCategory) {
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card';
+productCard.setAttribute('data-storeid', product.storeId);
+productCard.setAttribute('data-prodname', product.productName);
 
                 const googleMapUrl = `https://www.google.com/maps?q=${product.lat},${product.lon}`;
 

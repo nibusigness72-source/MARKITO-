@@ -107,6 +107,9 @@ function loadStoreProfileAndProducts() {
                     const card = document.createElement('div');
                     card.className = 'product-card';
                     card.style.cursor = "pointer";
+
+                  card.setAttribute('data-storeid', currentStoreId);
+    card.setAttribute('data-prodname', prod.productName);
                     
                     card.onclick = () => {
                         window.location.href = `./profile.html?storeId=${currentStoreId}&prodName=${encodeURIComponent(prod.productName)}`;
