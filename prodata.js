@@ -1,17 +1,15 @@
 // ==========================================
-// 📦 SASTA STORE - PRODUCT MANAGER SYSTEM (FIXED)
+// 📦 SASTA STORE - PRODUCT MANAGER SYSTEM (FIXED v2)
 // ==========================================
 
-// ग्लोबल वेरिएबल्स (डेटा को रैम में होल्ड करने के लिए)
-let currentSelectedBoxIndex = null; // कौन सा डिब्बा क्लिक हुआ है
-let currentProductPhotoBase64 = ""; // फॉर्म की फोटो का कंप्रेस्ड डेटा
+let currentSelectedBoxIndex = null;
+let currentProductPhotoBase64 = "";
 
-// 1️⃣ ६ डिब्बों में से किसी डिब्बे पर क्लिक करने पर फॉर्म खोलने का लॉजिक
+// 1️⃣ डिब्बे खोलना
 function openProductForm(boxIndex) {
-    currentSelectedBoxIndex = boxIndex; // डिब्बे का नंबर (0 से 5) याद रखो
-    currentProductPhotoBase64 = ""; // पुराना फोटो डेटा साफ़ करें
+    currentSelectedBoxIndex = boxIndex;
+    currentProductPhotoBase64 = "";
     
-    // 💡 यहाँ अपने HTML फॉर्म वाले पेज या पॉपअप को चालू (Show) करें
     const formPage = document.getElementById('add-product-form-page'); 
     if (formPage) {
         formPage.style.display = 'block'; 
@@ -19,278 +17,10 @@ function openProductForm(boxIndex) {
     console.log("फॉर्म खुल गया डिब्बा नंबर: " + boxIndex + " के लिए");
 }
 
-// 2️⃣ फॉर्म के अंदर फोटो डिब्बे पर क्लिक करने पर गैलरी खोलना और कंप्रेस करना
-function triggerProductPhotoUpload() {
-    // एक छुपा हुआ इनपुट बनाना ताकि गैलरी खुले
-    let hiddenInput = document.getElementById('fileInput'); // product.html में id='fileInput' है
-    if (!hiddenInput) {
-        hiddenInput = document.getElementById('productFileInput');
-    }
-    if (!hiddenInput) {
-        hiddenInput = document.createElement('input');
-        hiddenInput.type = 'file';
-        hiddenInput.id = 'productFileInput';
-        hiddenInput.accept = 'image/*';
-        hiddenInput.style.display = 'none';
-        document.body.appendChild(hiddenInput);
-    }
-    
-    hiddenInput.click(); // गैलरी ट्रिगर
-    
-    hiddenInput.onchange = function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const max_width = 500; // साइज़ छोटा रखने के लिए
-                let width = img.width;
-                let height = img.height;
-                
-                if (width > max_width) {
-                    height = Math.round((height * max_width) / width);
-                    width = max_width;
-                }
-                canvas.width = width;
-                canvas.height = height;
-                
-                ctx.fillStyle = "#FFFFFF";
-                ctx.fillRect(0, 0, width, height);
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // ६०% क्वालिटी पर कंप्रेस (KB में करने के लिए)
-                currentProductPhotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                
-// फॉर्म के अंदर वाले डिब्बे में फोटो तुरंत दिखाओ (साइज फिक्स कर दिया ताकि इनपुट नीचे न भागे)
-const formPhotoBox = document.getElementById('formPhotoPreview') || document.querySelector('.upload-box') || document.querySelector('.upload-section');
-if (formPhotoBox) {
-    formPhotoBox.innerHTML = `
-        <div class="upload-box" style="border:none; padding:0; width:120px; height:120px; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-            <img src="${currentProductPhotoBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
-        </div>
-        <p class="hint" style="color:#28a745; font-weight:bold; margin-top:5px;">Photo Loaded! ✅</p>
-    `;
-}
-
-                console.log("प्रोडक्ट फोटो फॉर्म में लोड हो गई! ✅");
-            };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
-}
-
-// 3️⃣ 'ADD PRODUCT' बटन दबाने पर पूरा डेटा एक साथ डेटाबेस में भेजना
-function submitProductToDatabase() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const boxFromURL = urlParams.get('box');
-    if (boxFromURL !== null) { currentSelectedBoxIndex = parseInt(boxFromURL); }
-
-    const user = firebase.auth().currentUser;
-    if (!user) { alert("प्रोडक्ट जोड़ने के लिए पहले अकाउंट लॉगिन करें!"); return; }
-    if (currentSelectedBoxIndex === null) { alert("कृपया पहले किसी डिब्बे पर क्लिक करें!"); return; }
-
-    const product_name_value = document.getElementById('pName')?.value.trim() || "";
-    const category_value = document.getElementById('pCategory')?.value || "";
-    const price_value = document.getElementById('pPrice')?.value.trim() || "";
-    const unit_value = document.getElementById('pUnit')?.value.trim() || "";
-    const brand_value = document.getElementById('pBrand')?.value.trim() || "";
-    const desc_value = document.getElementById('pDesc')?.value.trim() || "";
-    
-    let stockStatus = "In Stock";
-    const stockRadios = document.getElementsByName('stock');
-    if (stockRadios) {
-        for(let i = 0; i < stockRadios.length; i++) {
-            if(stockRadios[i].checked && stockRadios[i].value === "out") { stockStatus = "Out of Stock"; }
-        }
-    }
-
-    if (!product_name_value || !price_value || !category_value) {
-        alert("कृपया Product Name, Category और Price ज़रूर भरें!");
-        return;
-    }
-
-    // 🌟 अब देखो, यहाँ ब्रैकेट के अंदर सब कुछ सही क्रम में है:
-    firebase.database().ref('stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex).update({
-        boxIndex: currentSelectedBoxIndex,
-        productName: product_name_value,
-        category: category_value,
-        price: price_value,
-        unit: unit_value,
-        stockStatus: stockStatus,
-        photo: currentProductPhotoBase64 || "no_image.jpg",
-        lastUpdate: new Date().toLocaleDateString('en-IN'),
-        brand: brand_value,
-        description: desc_value
-    })
-    .then(() => {
-        alert("प्रोडक्ट डेटाबेस में सुरक्षित हो गया! 🎉");
-        window.location.href = "account.html"; 
-    })
-    .catch((error) => {
-        alert("डेटाबेस एरर: " + error.message);
-    });
-}
-
-
-// 4️⃣ लॉगिन होने पर या नया प्रोडक्ट सेव होने पर डेटाबेस से ६ डिब्बों में फोटो सजाना
-function loadSavedProductsFromDatabase() {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    firebase.database().ref('stores/' + user.uid + '/products').once('value')
-    .then((snapshot) => {
-        if (snapshot.exists()) {
-            const allProducts = snapshot.val();
-            
-            // लूप चलाकर सभी डिब्बों (0 से 100 तक) में सामान सेट करना
-            for (let i = 0; i < 100; i++) {
-                const productData = allProducts['box_' + i];
-                const outerBox = document.getElementById('outer-box-' + i);
-                
-                if (productData && outerBox) {
-                    outerBox.innerHTML = `
-                        <div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-sizing:border-box; position:absolute; top:0; left:0; padding:10px;">
-                            <img src="${productData.photo}" style="width: 100%; height: 95px; object-fit: cover; border-radius: 12px;">
-                            <p style="margin:4px 0 0 0; font-size:0.85rem; font-weight:bold; text-align:center; color:#333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${productData.productName}</p>
-                            <p style="margin:2px 0 0 0; font-size:0.8rem; color:#4285f4; font-weight:bold;">₹${productData.price} / ${productData.unit || 'पीसी'}</p>
-                            <span style="position:absolute; top:12px; right:12px; background:${productData.stockStatus === 'In Stock' ? '#2e7d32' : '#d32f2f'}; color:white; font-size:0.65rem; padding:2px 6px; border-radius:6px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-                                ${productData.stockStatus === 'In Stock' ? 'In' : 'Out'}
-                            </span>
-                        </div>
-                    `;
-                }
-            }
-        }
-    }).catch((error) => {  // <--- यहाँ ब्रैकेट और .catch को ऐसे आपस में जोड़ दिया
-        console.error("प्रोडक्ट लोड करने में एरर:", error);
-    });
-}
-
-
-// 5️⃣ फायरबेस का पहरेदार + फॉर्म में पुराना डेटा लोड करने का सिस्टम
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase !== 'undefined') {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                console.log("यूज़र एक्टिव है, डिब्बों का बैकअप लोड हो रहा है...");
-                loadSavedProductsFromDatabase();
-
-                // URL से बॉक्स का नंबर निकालना
-                const urlParams = new URLSearchParams(window.location.search);
-                const boxId = urlParams.get('box');
-                if (boxId !== null) {
-                    currentSelectedBoxIndex = parseInt(boxId);
-                    
-                    // अगर डेटाबेस में पुराना सामान है, तो फॉर्म के खानों में ऑटोमैटिक भर दो
-                    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId).once('value')
-                    .then((snapshot) => {
-                      if (snapshot.exists()) {
-    const data = snapshot.val();
-    if(document.getElementById('pName')) document.getElementById('pName').value = data.productName || "";
-    if(document.getElementById('pCategory')) document.getElementById('pCategory').value = data.category || "";
-    if(document.getElementById('pPrice')) document.getElementById('pPrice').value = data.price || "";
-    if(document.getElementById('pUnit')) document.getElementById('pUnit').value = data.unit || "";
-    // डेटाबेस से डेटा उठाकर फॉर्म में वापस भर देगा
-if (data.brand) document.getElementById('pBrand').value = data.brand;
-if (data.description) document.getElementById('pDesc').value = data.description;
-
-    
-    // 🚀 नीलेश भाई का स्टॉक लोड फिक्स: पुराना स्टेटस देखकर सही बटन टिक करेगा
-    const stockRadios = document.getElementsByName('stock');
-    if (stockRadios.length > 0 && data.stockStatus) {
-        if (data.stockStatus === "Out of Stock") {
-            stockRadios[1].checked = true; // Out stock वाले पर टिक करो
-        } else {
-            stockRadios[0].checked = true; // In stock वाले पर टिक करो
-        }
-    }
-    
-    // पुरानी फोटो को फॉर्म के अंदर तुरंत दिखाना (साइज फिक्स के साथ)
-
-const formPhotoBox = document.getElementById('formPhotoPreview') || document.querySelector('.upload-box') || document.querySelector('.upload-section');
-if (formPhotoBox && data.photo && data.photo !== "no_image.jpg") {
-    currentProductPhotoBase64 = data.photo;
-    formPhotoBox.innerHTML = `
-        <div class="upload-box" style="border:none; padding:0; width:120px; height:120px; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-            <img src="${data.photo}" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
-        </div>
-        <p class="hint" style="color:#28a745; font-weight:bold; margin-top:5px;">Tap to change photo</p>
-    `;
-}
-
-                        }
-                    });
-                }
-            }
-        });
-    }
-});
-// 6️⃣ उत्पाद को डेटाबेस से पूरी तरह डिलीट करने वाला फंक्शन
-function deleteProductFromDatabase() {
-    // अगर वेरिएबल में नंबर न हो, तो दोबारा URL से कन्फर्म करो
-    const urlParams = new URLSearchParams(window.location.search);
-    const boxFromURL = urlParams.get('box');
-    if (boxFromURL !== null) {
-        currentSelectedBoxIndex = parseInt(boxFromURL);
-    }
-
-    if (currentSelectedBoxIndex === null) {
-        alert("कृपया पहले किसी एक उत्पाद पर क्लिक करें!");
-        return;
-    }
-
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    if (confirm("क्या आप इस प्रोडक्ट को सच में डिलीट करना चाहते हैं?")) {
-        firebase.database().ref('stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex).remove()
-        .then(() => {
-            alert("सस्ता स्टोर: प्रोडक्ट पूरी तरह डिलीट हो गया है! 🗑️");
-            window.location.href = "account.html"; 
-        })
-        .catch((error) => {
-            alert("डिलीट करने में एरर: " + error.message);
-        });
-    }
-}
-
-// प्रीडाटा.जेएस के एकदम नीचे यह छोटा सा कोड डालो:
-function saveProductToDatabase() {
-    submitProductToDatabase();
-}
-
-
-// ✅ यह फंक्शन ब्रांड और डिस्क्रिप्शन को डेटाबेस में सेव करने का काम करेगा
-function saveExtraDetailsToDatabase(boxIndex) {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    // फॉर्म से वैल्यू उठाओ
-    const brandValue = document.getElementById('pBrand')?.value || "";
-    const descValue = document.getElementById('pDesc')?.value || "";
-
-    // फायरबेस में उसी बॉक्स के अंदर इसे अपडेट कर दो
-    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxIndex).update({
-        brand: brandValue,
-        description: descValue
-    }).then(() => {
-        console.log("Extra details saved successfully!");
-    }).catch((error) => {
-        console.error("Error saving details:", error);
-    });
-}
-// यह नया फोटो अपलोडर फंक्शन है
-// मेन फोटो अपलोडर
-// 1. यह फंक्शन मेन फोटो और गैलरी फोटो दोनों को संभालेगा
+// 2️⃣ MAIN PHOTO UPLOAD + COMPRESS (सिर्फ एक बार, cleaned up)
 function triggerProductPhotoUpload(photoNum = 'main') {
     window.selectedPhotoIndex = photoNum; 
     
-    // इनपुट को ढूंढें या बनाएं
     let fileInput = document.getElementById('productFileInput');
     if (!fileInput) {
         fileInput = document.createElement('input');
@@ -312,18 +42,58 @@ function triggerProductPhotoUpload(photoNum = 'main') {
             const base64 = event.target.result;
             
             if (photoNum === 'main') {
-                // मेन फोटो के लिए
-                currentProductPhotoBase64 = base64;
-                const formPhotoBox = document.getElementById('formPhotoPreview');
-                if (formPhotoBox) {
-                    formPhotoBox.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">`;
-                }
+                // MAIN PHOTO - Compress करेंगे
+                const img = new Image();
+                img.onerror = function() {
+                    console.error("Image load error");
+                    alert("फोटो लोड नहीं हो सकी। दोबारा कोशिश करें।");
+                };
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const max_width = 500;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > max_width) {
+                        height = Math.round((height * max_width) / width);
+                        width = max_width;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    currentProductPhotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    // Preview दिखाओ
+                    const formPhotoBox = document.getElementById('formPhotoPreview') || document.querySelector('.upload-box');
+                    if (formPhotoBox) {
+                        formPhotoBox.innerHTML = `
+                            <div style="width:120px; height:120px; margin:0 auto; overflow:hidden; border-radius:10px;">
+                                <img src="${currentProductPhotoBase64}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Crect fill=%27%23ddd%27 width=%27120%27 height=%27120%27/%3E%3C/svg%3E'">
+                            </div>
+                            <p style="color:#28a745; font-weight:bold; margin-top:5px;">Photo Loaded! ✅</p>
+                        `;
+                    }
+                    console.log("✅ Main photo compressed और ready!");
+                };
+                img.src = base64;
             } else {
-                // 10 गैलरी फोटो के लिए
+                // GALLERY PHOTOS (p1 to p10) - No compress, direct save
+                console.log("📸 Gallery photo " + photoNum + " upload हो रही है...");
+                
+                // पहले preview दिखाओ
                 const targetBox = document.getElementById('p-box-' + photoNum);
                 if (targetBox) {
-                    targetBox.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;">`;
+                    targetBox.innerHTML = `
+                        <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23ddd%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
+                    `;
                 }
+                
+                // फिर database में save करो
                 savePhotoToDatabase(photoNum, base64);
             }
         };
@@ -331,28 +101,263 @@ function triggerProductPhotoUpload(photoNum = 'main') {
     };
 }
 
-// 2. डेटाबेस में गैलरी फोटो सेव करना
+// 3️⃣ डेटाबेस में गैलरी फोटो सेव करना (Async properly)
 function savePhotoToDatabase(photoNum, base64) {
     const user = firebase.auth().currentUser;
-    if (!user) return;
-    const boxId = new URLSearchParams(window.location.search).get('box');
+    if (!user) {
+        alert("पहले login करें!");
+        return;
+    }
     
-    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/photos/p' + photoNum).set(base64)
-    .then(() => console.log("Photo " + photoNum + " saved!"));
+    const boxId = new URLSearchParams(window.location.search).get('box') || currentSelectedBoxIndex;
+    
+    if (!boxId) {
+        alert("Box ID नहीं मिला!");
+        return;
+    }
+    
+    firebase.database()
+        .ref('stores/' + user.uid + '/products/box_' + boxId + '/gallery/p' + photoNum)
+        .set(base64)
+        .then(() => {
+            console.log("✅ Photo " + photoNum + " database में save हो गई!");
+        })
+        .catch((error) => {
+            console.error("❌ Photo save error:", error);
+            alert("फोटो save नहीं हुई: " + error.message);
+        });
 }
 
+// 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
+function submitProductToDatabase() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const boxFromURL = urlParams.get('box');
+    if (boxFromURL !== null) { 
+        currentSelectedBoxIndex = parseInt(boxFromURL); 
+    }
 
+    const user = firebase.auth().currentUser;
+    if (!user) { 
+        alert("पहले अकाउंट लॉगिन करें!"); 
+        return; 
+    }
+    
+    if (currentSelectedBoxIndex === null) { 
+        alert("कृपया पहले किसी डिब्बे पर क्लिक करें!"); 
+        return; 
+    }
 
-// .then((snapshot) => { ... }) के अंदर, जहाँ तुम नाम और प्राइस लोड कर रहे हो:
-firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/photos').once('value')
-.then((snapshot) => {
-    if (snapshot.exists()) {
-        const photos = snapshot.val();
-        for (let i = 1; i <= 10; i++) {
-            if (photos['p' + i]) {
-                document.getElementById('p-box-' + i).innerHTML = 
-                    `<img src="${photos['p' + i]}" style="width:100%; height:40px; object-fit:cover;">`;
-            }
+    const product_name_value = document.getElementById('pName')?.value.trim() || "";
+    const category_value = document.getElementById('pCategory')?.value || "";
+    const price_value = document.getElementById('pPrice')?.value.trim() || "";
+    const unit_value = document.getElementById('pUnit')?.value.trim() || "";
+    const brand_value = document.getElementById('pBrand')?.value.trim() || "";
+    const desc_value = document.getElementById('pDesc')?.value.trim() || "";
+    
+    let stockStatus = "In Stock";
+    const stockRadios = document.getElementsByName('stock');
+    for(let i = 0; i < stockRadios.length; i++) {
+        if(stockRadios[i].checked && stockRadios[i].value === "out") { 
+            stockStatus = "Out of Stock"; 
         }
     }
+
+    if (!product_name_value || !price_value || !category_value) {
+        alert("कृपया Product Name, Category और Price ज़रूर भरें!");
+        return;
+    }
+
+    // MAIN PHOTO के साथ सब कुछ save करो
+    firebase.database()
+        .ref('stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex)
+        .update({
+            boxIndex: currentSelectedBoxIndex,
+            productName: product_name_value,
+            category: category_value,
+            price: price_value,
+            unit: unit_value,
+            stockStatus: stockStatus,
+            photo: currentProductPhotoBase64 || "no_image.jpg",
+            brand: brand_value,
+            description: desc_value,
+            lastUpdate: new Date().toLocaleDateString('en-IN')
+        })
+        .then(() => {
+            alert("✅ प्रोडक्ट डेटाबेस में सुरक्षित हो गया! 🎉");
+            window.location.href = "account.html"; 
+        })
+        .catch((error) => {
+            alert("❌ डेटाबेस एरर: " + error.message);
+        });
+}
+
+// 5️⃣ डेटाबेस से सभी प्रोडक्ट्स लोड करना (boxes में)
+function loadSavedProductsFromDatabase() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    firebase.database()
+        .ref('stores/' + user.uid + '/products')
+        .once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                const allProducts = snapshot.val();
+                
+                for (let i = 0; i < 100; i++) {
+                    const productData = allProducts['box_' + i];
+                    const outerBox = document.getElementById('outer-box-' + i);
+                    
+                    if (productData && outerBox) {
+                        outerBox.innerHTML = `
+                            <div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:space-between; box-sizing:border-box; position:absolute; top:0; left:0; padding:10px;">
+                                <img src="${productData.photo}" 
+                                     style="width: 100%; height: 95px; object-fit: cover; border-radius: 12px;"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27100%27 height=%2795%27%3E%3Crect fill=%27%23e0e0e0%27 width=%27100%27 height=%2795%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 fill=%27%23999%27 font-size=%2714%27 text-anchor=%27middle%27 dominant-baseline=%27middle%27%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                <p style="margin:4px 0 0 0; font-size:0.85rem; font-weight:bold; text-align:center; color:#333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${productData.productName}</p>
+                                <p style="margin:2px 0 0 0; font-size:0.8rem; color:#4285f4; font-weight:bold;">₹${productData.price} / ${productData.unit || 'पीसी'}</p>
+                                <span style="position:absolute; top:12px; right:12px; background:${productData.stockStatus === 'In Stock' ? '#2e7d32' : '#d32f2f'}; color:white; font-size:0.65rem; padding:2px 6px; border-radius:6px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                                    ${productData.stockStatus === 'In Stock' ? 'In' : 'Out'}
+                                </span>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        })
+        .catch((error) => {
+            console.error("❌ प्रोडक्ट लोड error:", error);
+        });
+}
+
+// 6️⃣ जब फॉर्म edit के लिए खुले तो पुरानी information load करना
+function loadProductFormDataFromDatabase() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const boxId = urlParams.get('box');
+    
+    if (boxId === null) return;
+    
+    currentSelectedBoxIndex = parseInt(boxId);
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    firebase.database()
+        .ref('stores/' + user.uid + '/products/box_' + boxId)
+        .once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                
+                // Form fields fill करो
+                if (document.getElementById('pName')) 
+                    document.getElementById('pName').value = data.productName || "";
+                if (document.getElementById('pCategory')) 
+                    document.getElementById('pCategory').value = data.category || "";
+                if (document.getElementById('pPrice')) 
+                    document.getElementById('pPrice').value = data.price || "";
+                if (document.getElementById('pUnit')) 
+                    document.getElementById('pUnit').value = data.unit || "";
+                if (document.getElementById('pBrand')) 
+                    document.getElementById('pBrand').value = data.brand || "";
+                if (document.getElementById('pDesc')) 
+                    document.getElementById('pDesc').value = data.description || "";
+
+                // Stock status set करो
+                const stockRadios = document.getElementsByName('stock');
+                if (stockRadios.length > 0 && data.stockStatus) {
+                    if (data.stockStatus === "Out of Stock") {
+                        stockRadios[1].checked = true;
+                    } else {
+                        stockRadios[0].checked = true;
+                    }
+                }
+                
+                // Main photo preview दिखाओ
+                if (data.photo && data.photo !== "no_image.jpg") {
+                    currentProductPhotoBase64 = data.photo;
+                    const formPhotoBox = document.getElementById('formPhotoPreview');
+                    if (formPhotoBox) {
+                        formPhotoBox.innerHTML = `
+                            <div style="width:120px; height:120px; margin:0 auto; overflow:hidden; border-radius:10px;">
+                                <img src="${data.photo}" 
+                                     style="width:100%; height:100%; object-fit:cover;"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Crect fill=%27%23ddd%27 width=%27120%27 height=%27120%27/%3E%3C/svg%3E'">
+                            </div>
+                            <p style="color:#666; font-weight:bold; margin-top:5px;">Tap to change</p>
+                        `;
+                    }
+                }
+                
+                // Gallery photos load करो
+                if (data.gallery) {
+                    for (let i = 1; i <= 10; i++) {
+                        if (data.gallery['p' + i]) {
+                            const galleryBox = document.getElementById('p-box-' + i);
+                            if (galleryBox) {
+                                galleryBox.innerHTML = `
+                                    <img src="${data.gallery['p' + i]}" 
+                                         style="width:100%; height:100%; object-fit:cover; border-radius:5px;"
+                                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23e0e0e0%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
+                                `;
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        .catch((error) => {
+            console.error("❌ Form data load error:", error);
+        });
+}
+
+// 7️⃣ डिलीट करना
+function deleteProductFromDatabase() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const boxFromURL = urlParams.get('box');
+    if (boxFromURL !== null) {
+        currentSelectedBoxIndex = parseInt(boxFromURL);
+    }
+
+    if (currentSelectedBoxIndex === null) {
+        alert("कृपया पहले किसी एक प्रोडक्ट पर क्लिक करें!");
+        return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    if (confirm("क्या आप इस प्रोडक्ट को डिलीट करना चाहते हैं?")) {
+        firebase.database()
+            .ref('stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex)
+            .remove()
+            .then(() => {
+                alert("✅ प्रोडक्ट डिलीट हो गया! 🗑️");
+                window.location.href = "account.html"; 
+            })
+            .catch((error) => {
+                alert("❌ डिलीट error: " + error.message);
+            });
+    }
+}
+
+// 8️⃣ Firebase listener + Auto-load on page load
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase !== 'undefined') {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log("✅ यूज़र logged in, डेटा लोड हो रहा है...");
+                loadSavedProductsFromDatabase();
+                
+                // अगर URL में box है तो form data भी load करो
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('box') !== null) {
+                    loadProductFormDataFromDatabase();
+                }
+            }
+        });
+    }
 });
+
+// 9️⃣ Utility: Product को save करने वाला wrapper
+function saveProductToDatabase() {
+    submitProductToDatabase();
+}
