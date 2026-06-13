@@ -129,67 +129,32 @@ function savePhotoToDatabase(photoNum, base64) {
 }
 
 // 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
+// पूरा पुराना submitProductToDatabase हटाकर यह लगाएं
 function submitProductToDatabase() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const boxFromURL = urlParams.get('box');
-    if (boxFromURL !== null) { 
-        currentSelectedBoxIndex = parseInt(boxFromURL); 
-    }
-
+    const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
-    if (!user) { 
-        alert("पहले अकाउंट लॉगिन करें!"); 
-        return; 
-    }
-    
-    if (currentSelectedBoxIndex === null) { 
-        alert("कृपया पहले किसी डिब्बे पर क्लिक करें!"); 
-        return; 
-    }
+    if (!user || !boxId) { alert("लॉगिन करें या बॉक्स चुनें!"); return; }
 
-    const product_name_value = document.getElementById('pName')?.value.trim() || "";
-    const category_value = document.getElementById('pCategory')?.value || "";
-    const price_value = document.getElementById('pPrice')?.value.trim() || "";
-    const unit_value = document.getElementById('pUnit')?.value.trim() || "";
-    const brand_value = document.getElementById('pBrand')?.value.trim() || "";
-    const desc_value = document.getElementById('pDesc')?.value.trim() || "";
-    
-    let stockStatus = "In Stock";
-    const stockRadios = document.getElementsByName('stock');
-    for(let i = 0; i < stockRadios.length; i++) {
-        if(stockRadios[i].checked && stockRadios[i].value === "out") { 
-            stockStatus = "Out of Stock"; 
-        }
-    }
+    const productData = {
+        productName: document.getElementById('pName')?.value.trim(),
+        category: document.getElementById('pCategory')?.value,
+        price: document.getElementById('pPrice')?.value.trim(),
+        unit: document.getElementById('pUnit')?.value.trim(),
+        brand: document.getElementById('pBrand')?.value.trim(),
+        description: document.getElementById('pDesc')?.value.trim(),
+        stockStatus: document.getElementsByName('stock')[1].checked ? "Out of Stock" : "In Stock",
+        photo: currentProductPhotoBase64 || "no_image.jpg", // मेन फोटो
+        lastUpdate: new Date().toLocaleDateString('en-IN')
+    };
 
-    if (!product_name_value || !price_value || !category_value) {
-        alert("कृपया Product Name, Category और Price ज़रूर भरें!");
-        return;
-    }
-
-    // MAIN PHOTO के साथ सब कुछ save करो
-    firebase.database()
-        .ref('stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex)
-        .update({
-            boxIndex: currentSelectedBoxIndex,
-            productName: product_name_value,
-            category: category_value,
-            price: price_value,
-            unit: unit_value,
-            stockStatus: stockStatus,
-            photo: currentProductPhotoBase64 || "no_image.jpg",
-            brand: brand_value,
-            description: desc_value,
-            lastUpdate: new Date().toLocaleDateString('en-IN')
-        })
-        .then(() => {
-            alert("✅ प्रोडक्ट डेटाबेस में सुरक्षित हो गया! 🎉");
-            window.location.href = "account.html"; 
-        })
-        .catch((error) => {
-            alert("❌ डेटाबेस एरर: " + error.message);
-        });
+    // अपडेट करें
+    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId).update(productData)
+    .then(() => {
+        alert("✅ प्रोडक्ट और जानकारी सेव हो गई!");
+        window.location.href = "account.html"; 
+    });
 }
+
 
 // 5️⃣ डेटाबेस से सभी प्रोडक्ट्स लोड करना (boxes में)
 function loadSavedProductsFromDatabase() {

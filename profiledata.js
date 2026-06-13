@@ -221,23 +221,25 @@ document.addEventListener('click', function(e) {
 function loadExtraDetails(prodName) {
     if (!currentStoreId || !prodName) return;
 
+    // ध्यान दें: हमने यहाँ '/gallery' पाथ सही कर दिया है
     firebase.database().ref('stores/' + currentStoreId + '/products').once('value').then((snapshot) => {
         snapshot.forEach((child) => {
             let data = child.val();
+            // प्रोडक्ट नाम मैच करना
             if (data.productName && data.productName.toLowerCase() === prodName.toLowerCase()) {
                 
-                // ब्रांड और डिस्क्रिप्शन भरें
+                // ब्रांड और डिस्क्रिप्शन
                 if(document.getElementById('sasta_disp_brand')) document.getElementById('sasta_disp_brand').innerText = data.brand || "कोई ब्रांड नहीं";
                 if(document.getElementById('sasta_disp_desc')) document.getElementById('sasta_disp_desc').innerText = data.description || "कोई विवरण नहीं";
 
-                // 10 फोटो लोड करें
-                if (data.photos) {
+                // 📸 गैलरी फोटो लोड करना (अब यह 'gallery' पाथ से डेटा उठाएगा)
+                if (data.gallery) { 
                     for (let i = 1; i <= 10; i++) {
                         let pBox = document.getElementById('photo-' + i);
-                        if (pBox && data.photos['p' + i]) {
-                            pBox.innerHTML = `<img src="${data.photos['p' + i]}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;">`;
-                            // फोटो क्लिक पर गैलरी खुलेगी
-                            pBox.onclick = () => openFullGallery(data.photos['p' + i]);
+                        if (pBox && data.gallery['p' + i]) {
+                            pBox.innerHTML = `<img src="${data.gallery['p' + i]}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;">`;
+                            // क्लिक पर गैलरी खोलें
+                            pBox.onclick = () => openFullGallery(data.gallery['p' + i]);
                         }
                     }
                 }

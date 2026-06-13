@@ -170,7 +170,7 @@ function setupAdvancedSearchSystem() {
     if (!suggestBox) {
         suggestBox = document.createElement('div');
         suggestBox.id = 'search-suggestions';
-        suggestBox.style.cssText = "position:absolute; background:white; width:100%; max-height:200px; overflow-y:auto; box-shadow:0 4px 8px rgba(0,0,0,0.1); border-radius:8px; z-index:999; display:none; border:1px solid #eee; margin-top:0.5rem;";
+        suggestBox.style.cssText = "position:absolute; background:white; width:100%; max-height:200px; overflow-y:auto; box-shadow:0 4px 8px rgba(0,0,0,0.1); border-radius:8px; z-index:999; display:none; border:1px solid #eee; margin-top:12.5rem;";
         searchInput.parentNode.style.position = "relative"; 
         searchInput.parentNode.appendChild(suggestBox);
     }
