@@ -286,55 +286,62 @@ function saveExtraDetailsToDatabase(boxIndex) {
 }
 // यह नया फोटो अपलोडर फंक्शन है
 // मेन फोटो अपलोडर
-function triggerProductPhotoUpload(photoNum) {
+// 1. यह फंक्शन मेन फोटो और गैलरी फोटो दोनों को संभालेगा
+function triggerProductPhotoUpload(photoNum = 'main') {
     window.selectedPhotoIndex = photoNum; 
     
-    // 1. सबसे पहले इनपुट को ढूंढो या बनाओ (ताकि लॉगिन के बाद भी मौजूद रहे)
-    let fileInput = document.getElementById('fileInput');
-    
-    // 2. अगर इनपुट नहीं मिल रहा, तो उसे फोर्सफुली बनाओ
+    // इनपुट को ढूंढें या बनाएं
+    let fileInput = document.getElementById('productFileInput');
     if (!fileInput) {
         fileInput = document.createElement('input');
         fileInput.type = 'file';
-        fileInput.id = 'fileInput';
+        fileInput.id = 'productFileInput';
         fileInput.accept = 'image/*';
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
     }
-
-    // 3. गैलरी खोलने के लिए क्लिक करो
+    
     fileInput.click();
-
-    // 4. लॉगिन के बाद भी कनेक्शन बना रहे इसके लिए onchange को सेट करो
+    
     fileInput.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
-
+        
         const reader = new FileReader();
         reader.onload = function(event) {
             const base64 = event.target.result;
             
-            // UI में फोटो दिखाओ
-            const targetBox = document.getElementById('p-box-' + window.selectedPhotoIndex);
-            if (targetBox) {
-                targetBox.innerHTML = `<img src="${base64}" style="width:100%; height:40px; object-fit:cover;">`;
+            if (photoNum === 'main') {
+                // मेन फोटो के लिए
+                currentProductPhotoBase64 = base64;
+                const formPhotoBox = document.getElementById('formPhotoPreview');
+                if (formPhotoBox) {
+                    formPhotoBox.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">`;
+                }
+            } else {
+                // 10 गैलरी फोटो के लिए
+                const targetBox = document.getElementById('p-box-' + photoNum);
+                if (targetBox) {
+                    targetBox.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;">`;
+                }
+                savePhotoToDatabase(photoNum, base64);
             }
-            
-            // डेटाबेस में फोटो सेव करो
-            savePhotoToDatabase(window.selectedPhotoIndex, base64);
         };
         reader.readAsDataURL(file);
     };
 }
 
-// डेटाबेस में फोटो सेव करने का फंक्शन
+// 2. डेटाबेस में गैलरी फोटो सेव करना
 function savePhotoToDatabase(photoNum, base64) {
     const user = firebase.auth().currentUser;
+    if (!user) return;
     const boxId = new URLSearchParams(window.location.search).get('box');
     
     firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/photos/p' + photoNum).set(base64)
-    .then(() => { console.log("Photo " + photoNum + " saved!"); });
+    .then(() => console.log("Photo " + photoNum + " saved!"));
 }
+
+
 
 // .then((snapshot) => { ... }) के अंदर, जहाँ तुम नाम और प्राइस लोड कर रहे हो:
 firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/photos').once('value')
