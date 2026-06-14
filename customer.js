@@ -186,43 +186,197 @@ function setupAdvancedSearchSystem() {
             return;
         }
 
-        let matches = [];
-        let uniqueNames = new Set();
+let suggestions = [];
+let suggestionKeys = new Set();
 
-        localProductsArray.forEach(prod => {
-            const pName = prod.productName ? prod.productName.toLowerCase() : "";
-            const cleanSearch = searchText.replace(/\s+/g, ''); 
-            const cleanProdName = pName.replace(/\s+/g, '');
+// Step 1: Search ko parts mein todo
+const parts = searchText.trim().split(/\s+/);
+const mainWord = parts[0]; // pehla word = product naam
+const filterWords = parts.slice(1).join(' '); // baaki = filter
 
-            if (pName.includes(searchText) || cleanProdName.includes(cleanSearch)) {
-                if (!uniqueNames.has(prod.productName)) {
-                    uniqueNames.add(prod.productName);
-                    matches.push(prod);
-                }
+// Step 2: Matching products dhundho
+const matchingProds = localProductsArray.filter(prod => {
+    const pName = (prod.productName || "").toLowerCase();
+    return pName.includes(mainWord);
+});
+
+if (matchingProds.length === 0) {
+    suggestBox.style.display = "none";
+    return;
+}
+
+// Step 3: Filter ke hisab se suggestions banao
+matchingProds.forEach(prod => {
+    const pName = prod.productName;
+    const desc = (prod.description || "").toLowerCase();
+    const price = parseFloat(prod.price || 0);
+    const descLines = desc.split('\n').map(l => l.trim()).filter(l => l);
+
+    const sizes = descLines.filter(l => l.startsWith('@')).map(l => l.substring(1));
+    const ages = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1));
+    const genders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1));
+    const tags = descLines.filter(l => l.startsWith('#')).map(l => l.substring(1));
+    const priceSteps = [100,200,300,500,1000,2000,5000].filter(s => price < s);
+
+    const fw = filterWords.toLowerCase().trim();
+
+    function addSug(label) {
+        const key = label.toLowerCase();
+        if (!suggestionKeys.has(key)) {
+            suggestionKeys.add(key);
+            suggestions.push({ label, search: label });
+        }
+    }
+
+    // Filter nahi - sirf naam
+    if (!fw) {
+        addSug(pName);
+        return;
+    }
+
+    // "under X size/gender Y" - 3 cheez ek saath
+    const fullMatch = fw.match(/^under\s+(\d+)\s+(.+)$/);
+    if (fullMatch) {
+        const amt = parseInt(fullMatch[1]);
+        const rest = fullMatch[2].trim();
+        if (price < amt) {
+            sizes.forEach(s => {
+                if (('size ' + s.toLowerCase()).startsWith(rest) || s.toLowerCase().startsWith(rest))
+                    addSug(`${pName} under ${amt} size ${s}`);
+            });
+            genders.forEach(g => {
+                if (g.toLowerCase().startsWith(rest))
+                    addSug(`${pName} under ${amt} ${g}`);
+            });
+        }
+        return;
+    }
+
+    // "size X under" - size pehle under baad
+    const sizeUnderMatch = fw.match(/^size\s+(\S+)\s+u(.*)$/) || fw.match(/^s\s+(\S+)\s+u(.*)$/);
+    if (sizeUnderMatch) {
+        const sFilter = sizeUnderMatch[1];
+        sizes.forEach(s => {
+            if (s.toLowerCase().startsWith(sFilter)) {
+                priceSteps.forEach(step => addSug(`${pName} size ${s} under ${step}`));
             }
         });
+        return;
+    }
 
-        if (matches.length > 0) {
-            suggestBox.style.display = "block";
-            matches.forEach(prod => {
-                const item = document.createElement('div');
-                item.style.cssText = "padding:10px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid #f9f9f9; color:#333; text-align:left; font-weight:bold;";
-                item.innerHTML = `🔍 ${prod.productName}`;
-                
-                item.onclick = () => {
-                    searchInput.value = prod.productName;
-                    suggestBox.style.display = "none";
-                    executeFinalSearch(prod.productName); 
-                };
-                suggestBox.appendChild(item);
-            });
+    // "gender under" - gender pehle under baad
+    const genderUnderMatch = fw.match(/^(\w+)\s+u(.*)$/);
+    if (genderUnderMatch) {
+        const gFilter = genderUnderMatch[1];
+        genders.forEach(g => {
+            if (g.toLowerCase().startsWith(gFilter)) {
+                priceSteps.forEach(step => addSug(`${pName} ${g} under ${step}`));
+            }
+        });
+    }
+
+    // "u" ya "under X" - price
+    if ('under'.startsWith(fw) || fw.startsWith('under')) {
+        const underNumOnly = fw.match(/^under\s+(\d+)$/);
+        if (underNumOnly) {
+            const amt = parseInt(underNumOnly[1]);
+            if (price < amt) {
+                addSug(`${pName} under ${amt}`);
+                sizes.forEach(s => addSug(`${pName} under ${amt} size ${s}`));
+                genders.forEach(g => addSug(`${pName} under ${amt} ${g}`));
+            }
         } else {
-            suggestBox.style.display = "none";
+            priceSteps.forEach(step => {
+                if (`under ${step}`.startsWith(fw))
+                    addSug(`${pName} under ${step}`);
+            });
+        }
+        return;
+    }
+
+    // "size X" ya "s X"
+    const sizeOnly = fw.match(/^size\s*(\S*)$/) || fw.match(/^s\s+(\S+)$/);
+    if (sizeOnly) {
+        const sFilter = sizeOnly[1] || '';
+        sizes.forEach(s => {
+            if (!sFilter || s.toLowerCase().startsWith(sFilter)) {
+                addSug(`${pName} size ${s}`);
+                priceSteps.forEach(step => addSug(`${pName} size ${s} under ${step}`));
+            }
+        });
+        return;
+    }
+
+    // "s" short - size
+    if (fw.length <= 2 && fw.startsWith('s')) {
+        sizes.forEach(s => {
+            if (s.toLowerCase().startsWith(fw) || ('size ' + s.toLowerCase()).startsWith(fw))
+                addSug(`${pName} size ${s}`);
+        });
+    }
+
+    // "for X" ya "f" likhne par gender suggestions
+    const forMatch = fw.match(/^for\s+(.*)$/) || (fw.startsWith('f') ? [null, fw.substring(1)] : null);
+    if (forMatch) {
+        const gFilter = (forMatch[1] || '').trim();
+        genders.forEach(g => {
+            if (!gFilter || g.toLowerCase().startsWith(gFilter)) {
+                addSug(`${pName} for ${g}`);
+                sizes.forEach(s => addSug(`${pName} for ${g} size ${s}`));
+                priceSteps.forEach(step => {
+                    addSug(`${pName} for ${g} under ${step}`);
+                    sizes.forEach(s => addSug(`${pName} for ${g} size ${s} under ${step}`));
+                });
+            }
+        });
+    }
+
+    // Gender bina "for" ke bhi (male, female direct)
+    genders.forEach(g => {
+        if (g.toLowerCase().startsWith(fw)) {
+            addSug(`${pName} ${g}`);
+            sizes.forEach(s => addSug(`${pName} ${g} size ${s}`));
+            priceSteps.forEach(step => {
+                addSug(`${pName} ${g} under ${step}`);
+                sizes.forEach(s => addSug(`${pName} ${g} size ${s} under ${step}`));
+            });
         }
     });
 
-    document.addEventListener('click', (e) => {
-        if (e.target !== searchInput) suggestBox.style.display = "none";
+    // Age: "12" likhne par "12 years" ya "for 12 years"
+    if (/^\d/.test(fw)) {
+        ages.forEach(a => {
+            if (a.toLowerCase().startsWith(fw)) {
+                addSug(`${pName} ${a}`);
+                priceSteps.forEach(step => addSug(`${pName} ${a} under ${step}`));
+                sizes.forEach(s => addSug(`${pName} ${a} size ${s}`));
+            }
+        });
+    }
+    // Tags
+    tags.forEach(t => {
+        if (t.toLowerCase().startsWith(fw))
+            addSug(`${pName} ${t}`);
+    });
+});
+
+// Step 4: Dikhao
+if (suggestions.length > 0) {
+    suggestBox.style.display = "block";
+    suggestions.slice(0, 8).forEach(sug => {
+        const item = document.createElement('div');
+        item.style.cssText = "padding:10px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid #f9f9f9; color:#333; text-align:left; font-weight:bold;";
+        item.innerHTML = `🔍 ${sug.label}`;
+        item.onclick = () => {
+            searchInput.value = sug.search;
+            suggestBox.style.display = "none";
+            executeFinalSearch(sug.search);
+        };
+        suggestBox.appendChild(item);
+    });
+} else {
+    suggestBox.style.display = "none";
+}
     });
 }
 
