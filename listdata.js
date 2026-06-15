@@ -189,26 +189,108 @@ function toggleItems(id) { const extra = document.getElementById(id); if(extra) 
 function showSuggestions(val) {
     const list = document.getElementById('suggestion-list');
     if (!list) return;
-
     list.innerHTML = "";
     if (val === "") { list.style.display = "none"; return; }
 
-    const allItems = Array.from(document.querySelectorAll('.item-row span:first-child'))
-                          .map(s => s.innerText.trim());
-    const uniqueItems = [...new Set(allItems)];
-    const matches = uniqueItems.filter(name => name.toLowerCase().includes(val.toLowerCase()));
+    const searchText = val.toLowerCase().trim();
+    const parts = searchText.split(/\s+/);
+    const mainWord = parts[0];
+    const fw = parts.slice(1).join(' ').trim();
 
-    if (matches.length > 0) {
+    let suggestions = [];
+    let suggestionKeys = new Set();
+
+    function addSug(label) {
+        const key = label.toLowerCase();
+        if (!suggestionKeys.has(key)) { suggestionKeys.add(key); suggestions.push(label); }
+    }
+
+    Array.from(document.querySelectorAll('.item-row')).forEach(row => {
+        const pName = row.querySelector('span:first-child')?.innerText.trim() || "";
+        if (!pName.toLowerCase().includes(mainWord)) return;
+
+        const desc = (row.getAttribute('data-desc') || "").toLowerCase();
+        const price = parseFloat(row.getAttribute('data-price') || 0);
+        const descLines = desc.split('\n').map(l => l.trim());
+        const sizes = descLines.filter(l => l.startsWith('@')).map(l => l.substring(1));
+        const genders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1));
+        const ages = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1));
+        const priceSteps = [100,200,300,500,1000,2000,5000].filter(s => price < s);
+
+        if (!fw) { addSug(pName); return; }
+
+        // "f" ya "for" → gender
+        if (fw.startsWith('f')) {
+            const gFilter = fw.startsWith('for ') ? fw.substring(4) : '';
+            genders.forEach(g => {
+                if (!gFilter || g.toLowerCase().startsWith(gFilter)) {
+                    addSug(`${pName} for ${g}`);
+                    sizes.forEach(s => addSug(`${pName} for ${g} size ${s}`));
+                    priceSteps.forEach(step => {
+                        addSug(`${pName} for ${g} under ${step}`);
+                        sizes.forEach(s => addSug(`${pName} for ${g} size ${s} under ${step}`));
+                    });
+                }
+            });
+        }
+
+        // "s" ya "size X" → size
+        if (fw.startsWith('s')) {
+            const sFilter = fw.startsWith('size ') ? fw.substring(5) : '';
+            sizes.forEach(s => {
+                if (!sFilter || s.toLowerCase().startsWith(sFilter)) {
+                    addSug(`${pName} size ${s}`);
+                    priceSteps.forEach(step => addSug(`${pName} size ${s} under ${step}`));
+                }
+            });
+        }
+
+        // "u" ya "under X" → price
+        if (fw.startsWith('u')) {
+            const underNum = fw.match(/^under\s+(\d+)$/);
+            if (underNum) {
+                const amt = parseInt(underNum[1]);
+                if (price < amt) {
+                    addSug(`${pName} under ${amt}`);
+                    sizes.forEach(s => addSug(`${pName} under ${amt} size ${s}`));
+                    genders.forEach(g => addSug(`${pName} under ${amt} for ${g}`));
+                }
+            } else {
+                priceSteps.forEach(step => {
+                    if (`under ${step}`.startsWith(fw)) addSug(`${pName} under ${step}`);
+                });
+            }
+        }
+
+        // number → age
+        if (/^\d/.test(fw)) {
+            ages.forEach(a => {
+                if (a.toLowerCase().startsWith(fw)) {
+                    addSug(`${pName} ${a}`);
+                    priceSteps.forEach(step => addSug(`${pName} ${a} under ${step}`));
+                }
+            });
+        }
+
+        // direct gender
+        genders.forEach(g => {
+            if (g.toLowerCase().startsWith(fw)) {
+                addSug(`${pName} ${g}`);
+                priceSteps.forEach(step => addSug(`${pName} ${g} under ${step}`));
+            }
+        });
+    });
+
+    if (suggestions.length > 0) {
         list.style.display = "block";
-        matches.forEach(m => {
+        suggestions.slice(0, 8).forEach(m => {
             const item = document.createElement('div');
             item.style.cssText = "padding:10px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid #f9f9f9; color:#333; text-align:left; font-weight:bold; background:#fff;";
             item.innerHTML = `🔍 ${m}`;
-            
             item.onclick = () => {
-                document.getElementById('mainSearch').value = m; // नाम बॉक्स में डालें
-                addTag(m); // टैग बनाएं और सर्च ट्रिगर करें
-                document.getElementById('mainSearch').value = ""; 
+                document.getElementById('mainSearch').value = m;
+                addTag(m);
+                document.getElementById('mainSearch').value = "";
                 list.style.display = "none";
             };
             list.appendChild(item);
@@ -217,8 +299,6 @@ function showSuggestions(val) {
         list.style.display = "none";
     }
 }
-
-
 // Input पर listener
 document.getElementById('mainSearch').addEventListener('input', function(e) {
     showSuggestions(e.target.value);
