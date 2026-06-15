@@ -391,10 +391,27 @@ function executeFinalSearch(keyword) {
     const cleanSearch = searchKey.replace(/\s+/g, '');
 
     // [भाग 1] ग्राहक ने जो नाम खोजा है उसे निकालो
+const parts = searchKey.split(/\s+/);
+    const mainWord = parts[0];
+    const maxPrice = (() => { const i = parts.indexOf('under'); return i !== -1 ? parseInt(parts[i+1]) || Infinity : Infinity; })();
+    const sizeFilter = (() => { const i = parts.indexOf('size'); return i !== -1 ? (parts[i+1] || '').toUpperCase() : null; })();
+    const genderFilter = (() => { const i = parts.indexOf('for'); if(i !== -1 && parts[i+1]) return parts[i+1]; return ['male','female','men','women','boy','girl'].find(g => parts.includes(g)) || null; })();
+    const ageFilter = (() => { for(const p of parts){ if(/^\d+years?$/.test(p)) return p.replace(/years?/,''); if(/^\d+$/.test(p) && parseInt(p)<100) return p; } return null; })();
+
     let filteredResults = localProductsArray.filter(prod => {
-        const pName = prod.productName ? prod.productName.toLowerCase() : "";
-        const cleanProdName = pName.replace(/\s+/g, '');
-        return pName.includes(searchKey) || cleanProdName.includes(cleanSearch);
+        const pName = (prod.productName || "").toLowerCase();
+        const price = parseFloat(prod.price || 0);
+        const descLines = (prod.description || "").toLowerCase().split('\n').map(l => l.trim());
+        const prodSizes = descLines.filter(l => l.startsWith('@')).map(l => l.substring(1).toUpperCase());
+        const prodGenders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1).toLowerCase());
+        const prodAges = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1).toLowerCase());
+
+        if (!pName.includes(mainWord)) return false;
+        if (price > maxPrice) return false;
+        if (sizeFilter && !prodSizes.includes(sizeFilter)) return false;
+        if (genderFilter && !prodGenders.some(g => g.includes(genderFilter))) return false;
+        if (ageFilter && !prodAges.some(a => a.includes(ageFilter))) return false;
+        return true;
     });
 
     // सबसे सस्ता सामान पहले
