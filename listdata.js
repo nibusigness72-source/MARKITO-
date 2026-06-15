@@ -55,7 +55,7 @@ card.setAttribute('data-category', allCategories);
                 let itemsHtml = "";
                 productsArray.forEach((prod, index) => {
                     if (prod.stockStatus === "Out of Stock") return;
-                    let rowHtml = `<div class="item-row"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
+               let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
                     if (index < 1) itemsHtml += rowHtml;
                     else {
                         if (index === 1) itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
@@ -108,7 +108,27 @@ function startSearch() {
         allItems.forEach(row => {
             const pName = row.querySelector('span:first-child').textContent.toLowerCase();
             const pPrice = parseFloat(row.querySelector('span:last-child').innerText.replace('₹', '')) || 0;
-            let isMatch = totalSearched === 0 || searchTerms.some(term => pName.includes(term));
+            const descLines = (row.getAttribute('data-desc') || "").toLowerCase().split('\n').map(l => l.trim());
+            const prodSizes = descLines.filter(l => l.startsWith('@')).map(l => l.substring(1).toUpperCase());
+            const prodGenders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1).toLowerCase());
+            const prodAges = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1).toLowerCase());
+
+            let isMatch = totalSearched === 0 || searchTerms.some(term => {
+                const parts = term.split(/\s+/);
+                const mainWord = parts[0];
+                const maxPrice = (() => { const i = parts.indexOf('under'); return i !== -1 ? parseInt(parts[i+1]) || Infinity : Infinity; })();
+                const sizeFilter = (() => { const i = parts.indexOf('size'); return i !== -1 ? (parts[i+1] || '').toUpperCase() : null; })();
+                const genderFilter = (() => { const i = parts.indexOf('for'); if(i !== -1 && parts[i+1]) return parts[i+1]; return ['male','female','men','women','boy','girl'].find(g => parts.includes(g)) || null; })();
+                const ageFilter = (() => { for(const p of parts){ if(/^\d+years?$/.test(p)) return p.replace(/years?/,''); if(/^\d+$/.test(p) && parseInt(p)<100) return p; } return null; })();
+                const price = parseFloat(row.getAttribute('data-price') || 0);
+
+                if (!pName.includes(mainWord)) return false;
+                if (price > maxPrice) return false;
+                if (sizeFilter && !prodSizes.includes(sizeFilter)) return false;
+                if (genderFilter && !prodGenders.some(g => g.includes(genderFilter))) return false;
+                if (ageFilter && !prodAges.some(a => a.includes(ageFilter))) return false;
+                return true;
+            });
             
             row.style.display = isMatch ? 'flex' : 'none';
             if (isMatch) {
