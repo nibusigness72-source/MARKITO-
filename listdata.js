@@ -133,7 +133,7 @@ function startSearch() {
             row.style.display = isMatch ? 'flex' : 'none';
             if (isMatch) {
                 cardTotal += pPrice;
-                searchTerms.forEach(term => { if(pName.includes(term)) foundTerms.add(term); });
+                searchTerms.forEach(term => { if(isMatch) foundTerms.add(term); });
             }
         });
 
