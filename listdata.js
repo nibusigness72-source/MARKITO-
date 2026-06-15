@@ -139,7 +139,7 @@ function startSearch() {
 
         if (totalSearched === 0) {
             card.style.display = 'block';
-        } else if (foundTerms.size > 0) {
+        } else if (foundTerms.size > 0 || (totalSearched > 0 && cardTotal > 0)) {
             card.style.display = 'block';
             card.querySelectorAll('strong')[0].innerText = '₹' + cardTotal;
             card.querySelectorAll('strong')[1].innerText = foundTerms.size + '/' + totalSearched;
