@@ -2,6 +2,17 @@
 // 🛒 SASTA STORE - LIVE SYNCED CUSTOMER SYSTEM (🚨 NETLIFY FIXED)
 // ==========================================
 
+let sortMode = 'smart'; // 'smart' ya 'near'
+
+function setSortMode(mode) {
+    sortMode = mode;
+    document.getElementById('smartBtn').style.background = mode === 'smart' ? '#4285f4' : '#eee';
+    document.getElementById('smartBtn').style.color = mode === 'smart' ? '#fff' : '#333';
+    document.getElementById('nearBtn').style.background = mode === 'near' ? '#4285f4' : '#eee';
+    document.getElementById('nearBtn').style.color = mode === 'near' ? '#fff' : '#333';
+    fetchStoresFromFirebase(); // dobara sort karke dikhao
+}
+
 let allStoresData = [];       // Database ki sabhi dukano ka live data
 let localProductsArray = [];   // Search aur suggestions ke liye products ka backup
 let userLatitude = null;       // Grahak ka live Latitude
@@ -107,6 +118,9 @@ for (let storeId in stores) {
 let allProductsFlat = allStoresData.flatMap(s => s.products);
 
 allProductsFlat.sort((a, b) => {
+    if (sortMode === 'near') {
+        return a.distance - b.distance;
+    }
     return getSmartScore(a) - getSmartScore(b);
 });
 
@@ -419,6 +433,9 @@ const parts = searchKey.split(/\s+/);
 
 // Search result ko rank ke hisab se sort karo
 filteredResults.sort((a, b) => {
+    if (sortMode === 'near') {
+        return a.distance - b.distance;
+    }
     return getSmartScore(a) - getSmartScore(b);
 });
 
@@ -654,3 +671,4 @@ function getSmartScore(prod) {
     const travelCost = getTravelCost(prod.distance);
     return price + travelCost;
 }
+

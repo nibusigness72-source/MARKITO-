@@ -53,8 +53,13 @@
   
     <header class="top-header">
         <div class="logo-area">
-            <h1 class="main-logo">SASTA STORE <i class=""></i></h1> <p class="tagline">📍 Best Deals Near You</p>
+            <h1 class="main-logo"> <i class=""></i></h1> <p class="tagline"></p>
         </div>
+
+      <div style="display:flex; gap:10px; margin:10px 0;">
+    <button id="smartBtn" onclick="setSortMode('smart')" style="flex:1; padding:10px; background:#4285f4; color:#fff; border:none; border-radius:8px; font-weight:bold;">⚡ Smart</button>
+    <button id="nearBtn" onclick="setSortMode('near')" style="flex:1; padding:10px; background:#eee; color:#333; border:none; border-radius:8px; font-weight:bold;">📍 No Compare</button>
+      </div>
 
         <div class="location-bar">
             <div class="loc-left">
@@ -62,6 +67,8 @@
             </div>
             <button class="change-btn">on</button>
         </div>
+
+      
 
        <div class="search-container" id="search-box">
     
@@ -116,6 +123,7 @@
         <div class="icon-box"><img src="bike.jpg" style="width: 100%;"></div> <span>Electronic</span>
     </div>
 </section>
+  
 
 
 <section class="product-list">
@@ -267,7 +275,26 @@
 <script src="algocategory.js"></script>
 <script src="customer.js"></script>
 
+<div id="page-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:9999; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+</div>
 
+<script>
+// Page navigate karte waqt scroll position save karo
+window.addEventListener('beforeunload', () => {
+    sessionStorage.setItem('scrollPos', window.scrollY);
+});
+
+// Wapas aane par scroll position restore karo  
+window.addEventListener('pageshow', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if(pos) {
+        setTimeout(() => {
+            window.scrollTo(0, parseInt(pos));
+            sessionStorage.removeItem('scrollPos');
+        }, 100);
+    }
+});
+</script>
 
 </body>
 </html>

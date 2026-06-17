@@ -66,7 +66,7 @@ card.setAttribute('data-category', allCategories);
 
                 card.innerHTML = `
                     <div class="store-top">
-                        <img src="${photo}" class="store-img">
+                        <img src="rasgulla.jpg" data-src="${photo}" class="store-img">
                         <div class="store-details">
                             <h2 class="store-name">${shopName}</h2>
                             <div class="dist-tag" style="color:green; font-weight:bold;">${distText}</div>
@@ -87,6 +87,7 @@ card.setAttribute('data-category', allCategories);
                     </button>
                 `;
                 container.appendChild(card);
+              window.lazyLoadAll && window.lazyLoadAll();
             });
         });
     });
@@ -103,6 +104,8 @@ function startSearch() {
     document.querySelectorAll('.store-card').forEach(card => {
         let cardTotal = 0;
         let foundTerms = new Set();
+      // Har card mein seen names track karo
+const seenNames = new Set();
         const allItems = card.querySelectorAll('.item-row');
 
         allItems.forEach(row => {
@@ -130,7 +133,10 @@ function startSearch() {
                 return true;
             });
             
-            row.style.display = isMatch ? 'flex' : 'none';
+            const rowName = row.querySelector('span:first-child').textContent.trim().toLowerCase();
+if (isMatch && seenNames.has(rowName)) isMatch = false;
+if (isMatch) seenNames.add(rowName);
+row.style.display = isMatch ? 'flex' : 'none';
             if (isMatch) {
                 cardTotal += pPrice;
                 searchTerms.forEach(term => { if(isMatch) foundTerms.add(term); });
@@ -299,7 +305,7 @@ function showSuggestions(val) {
         list.style.display = "none";
     }
 }
-// Input पर listener
+// Input h
 document.getElementById('mainSearch').addEventListener('input', function(e) {
     showSuggestions(e.target.value);
 });
