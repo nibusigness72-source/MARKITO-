@@ -9,6 +9,15 @@
 </head>
 <body>
 
+  
+    
+    <div style="display:flex; gap:10px; margin-top:10px;">
+        <button id="smartBtnList" onclick="setSortModeList('smart')" style="flex:1; padding:10px; background:#4285f4; color:#fff; border:none; border-radius:8px; font-weight:bold;">⚡ Smart</button>
+        <button id="nearBtnList" onclick="setSortModeList('near')" style="flex:1; padding:10px; background:#eee; color:#333; border:none; border-radius:8px; font-weight:bold;">📍 No Compare</button>
+    </div>
+</div>
+  
+
 <div class="search-container">
     <div class="search-box" style="display: flex; flex-direction: column; padding: 10px; background: #fff; border-radius: 20px;">
         <div id="tag-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 5px;"></div>
@@ -22,6 +31,7 @@
     <button class="search-btn" onclick="startSearch()" style="width:100%; margin-top:5px;">SEARCH</button>
 </div>
 
+  
 
 <div class="container">
     <div class="store-card">
@@ -93,6 +103,8 @@
 <script src="script.js"></script>
 <script src="location.js"></script>
 <script src="algocategory.js"></script>
+    <script src="storestatus.js"></script>
+  <script src="api.js"></script>
 <script src="listdata.js"></script>
   
 

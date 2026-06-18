@@ -1,10 +1,20 @@
+let sortModeList = 'smart';
+
+function setSortModeList(mode) {
+    sortModeList = mode;
+    document.getElementById('smartBtnList').style.background = mode === 'smart' ? '#4285f4' : '#eee';
+    document.getElementById('smartBtnList').style.color = mode === 'smart' ? '#fff' : '#333';
+    document.getElementById('nearBtnList').style.background = mode === 'near' ? '#4285f4' : '#eee';
+    document.getElementById('nearBtnList').style.color = mode === 'near' ? '#fff' : '#333';
+    loadListSystem();
+}
 // 1. दूरी कैलकुलेट करने का फंक्शन
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) * 1.7;
 }
 
 // 2. लिस्ट लोड करने का फंक्शन
@@ -16,21 +26,32 @@ function loadListSystem() {
         const uLat = pos.coords.latitude;
         const uLon = pos.coords.longitude;
 
-        firebase.database().ref('stores').on('value', (snapshot) => {
+        firebase.database().ref('stores').on('value', async (snapshot) => {
             container.innerHTML = "";
             const stores = snapshot.val();
             if (!stores) return;
             
             // 1. दुकानों की लिस्ट तैयार और सॉर्ट की
             let storesArray = Object.keys(stores).map(key => ({ id: key, ...stores[key] }));
-            storesArray.forEach(store => {
+            storesArray = storesArray.filter(store => isStoreOpenNow(store));
+
+            for (const store of storesArray) {
                 let products = Object.values(store.products || {});
-                let dist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
+                const fallbackDist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
+                let dist = window.getRoadDistance 
+                    ? await window.getRoadDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0, fallbackDist)
+                    : fallbackDist;
+                store._distVal = dist;
                 let travelCost = window.getTravelCost ? window.getTravelCost(dist) : (dist <= 0.5) ? 5 : (dist <= 1) ? 15 : (dist <= 2) ? 25 : (dist <= 3) ? 35 : (dist <= 4) ? 40 : (dist <= 5) ? 50 : (dist <= 6) ? 55 : (dist <= 7) ? 60 : (dist <= 8) ? 70 : (dist <= 9) ? 85 : (dist <= 10) ? 100 : (dist <= 15) ? 200 : (dist <= 20) ? 300 : (dist <= 50) ? 1000 : 2000;
-let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
-store.effectivePrice = totalBill + travelCost;
-            });
-            storesArray.sort((a, b) => a.effectivePrice - b.effectivePrice);
+                let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                store.effectivePrice = totalBill + travelCost;
+            }
+            storesArray.sort((a, b) => {
+    if (sortModeList === 'near') {
+        return a._distVal - b._distVal;
+    }
+    return a.effectivePrice - b.effectivePrice;
+});
 
             // 2. अब सिर्फ इस सॉर्टेड लिस्ट को लूप करें (पुराना 'for in' लूप हटा दिया)
             storesArray.forEach((store) => {
@@ -65,8 +86,8 @@ card.setAttribute('data-category', allCategories);
                 if (productsArray.length > 1) itemsHtml += `</div>`; 
 
                 card.innerHTML = `
-                    <div class="store-top">
-                        <img src="rasgulla.jpg" data-src="${photo}" class="store-img">
+                       <div class="store-top">
+                        <img src="${photo}" class="store-img">
                         <div class="store-details">
                             <h2 class="store-name">${shopName}</h2>
                             <div class="dist-tag" style="color:green; font-weight:bold;">${distText}</div>
@@ -162,6 +183,11 @@ const hiddenCards = allCards.filter(c => c.style.display === 'none');
 visibleCards.sort((a, b) => {
     const distA = parseFloat(a.getAttribute('data-distance-km') || 0);
     const distB = parseFloat(b.getAttribute('data-distance-km') || 0);
+
+    if (sortModeList === 'near') {
+        return distA - distB;
+    }
+
     const priceA = parseFloat((a.querySelector('.stats-box strong')?.innerText || '0').replace('₹','')) || 0;
     const priceB = parseFloat((b.querySelector('.stats-box strong')?.innerText || '0').replace('₹','')) || 0;
     const costA = (distA<=0.5)?5:(distA<=1)?15:(distA<=2)?25:(distA<=3)?35:(distA<=4)?40:(distA<=5)?50:(distA<=6)?55:(distA<=7)?60:(distA<=8)?70:(distA<=9)?85:(distA<=10)?100:(distA<=15)?200:(distA<=20)?300:(distA<=50)?1000:2000;

@@ -48,7 +48,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
         Math.sin(dLat/2) * Math.sin(dLat/2) +
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; 
+    return (R * c) * 1.7;
 }
 
 // 3️⃣ Firebase se data live kheechna
@@ -58,7 +58,7 @@ function fetchStoresFromFirebase() {
         return;
     }
     
-    firebase.database().ref('stores').on('value', (snapshot) => {
+firebase.database().ref('stores').on('value', async (snapshot) => {
         const sections = document.querySelectorAll('.product-list');
         if (sections.length === 0) return;
 
@@ -70,19 +70,22 @@ function fetchStoresFromFirebase() {
 
         if (snapshot.exists()) {
             const stores = snapshot.val();
-for (let storeId in stores) {
+            for (const storeId of Object.keys(stores)) {
                 // Purana wala code wapas aa gaya
                 const rootData = stores[storeId] || {};
+                if (!isStoreOpenNow(rootData)) continue;
                 const productsObj = rootData.products; 
- // सीधे मुख्य नोड से प्रोडक्ट्स उठाओ
+                // सीधे मुख्य नोड से प्रोडक्ट्स उठाओ
 
-    // 📍 सीधे मुख्य नोड (stores/UID) से नाम और लोकेशन निकालना
-    const storeLat = rootData.location?.latitude || null; 
-    const storeLon = rootData.location?.longitude || null;
-    const finalStoreName = rootData.shopName || "सस्ता स्टोर लोकल शॉप";
+                // 📍 सीधे मुख्य नोड (stores/UID) से नाम और लोकेशन निकालना
+                const storeLat = rootData.location?.latitude || null; 
+                const storeLon = rootData.location?.longitude || null;
+                const finalStoreName = rootData.shopName || "सस्ता स्टोर लोकल शॉप";
 
-       
-                const distance = calculateDistance(userLatitude, userLongitude, storeLat, storeLon);
+                const fallbackDist = calculateDistance(userLatitude, userLongitude, storeLat, storeLon);
+                const distance = window.getRoadDistance 
+                    ? await window.getRoadDistance(userLatitude, userLongitude, storeLat, storeLon, fallbackDist)
+                    : fallbackDist;
 
                 if (productsObj) {
                     let storeProducts = [];

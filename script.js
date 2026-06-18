@@ -110,12 +110,19 @@ function toggleStoreStatus() {
 
     if (isChecked) {
         hText.innerText = "दुकान खुली है";
-        hText.style.color = "#2e7d32"; // हरा रंग
+        hText.style.color = "#2e7d32";
         eText.innerText = "Your store is visible to everyone";
     } else {
         hText.innerText = "दुकान बंद है";
-        hText.style.color = "#d32f2f"; // लाल रंग
+        hText.style.color = "#d32f2f";
         eText.innerText = "Store is hidden from search results";
+    }
+
+    const user = firebase.auth().currentUser;
+    if (user) {
+        firebase.database().ref('stores/' + user.uid).update({
+            status: isChecked ? "open" : "closed"
+        });
     }
 }
 // --- CREATE ACCOUNT LOGIC START ---
