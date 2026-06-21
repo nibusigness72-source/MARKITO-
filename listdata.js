@@ -26,26 +26,22 @@ function loadListSystem() {
         const uLat = pos.coords.latitude;
         const uLon = pos.coords.longitude;
 
-        firebase.database().ref('stores').on('value', async (snapshot) => {
+        firebase.database().ref('stores').on('value', (snapshot) => {
             container.innerHTML = "";
             const stores = snapshot.val();
             if (!stores) return;
             
             // 1. दुकानों की लिस्ट तैयार और सॉर्ट की
             let storesArray = Object.keys(stores).map(key => ({ id: key, ...stores[key] }));
-            storesArray = storesArray.filter(store => isStoreOpenNow(store));
-
-            for (const store of storesArray) {
+          storesArray = storesArray.filter(store => isStoreOpenNow(store));
+            storesArray.forEach(store => {
                 let products = Object.values(store.products || {});
-                const fallbackDist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
-                let dist = window.getRoadDistance 
-                    ? await window.getRoadDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0, fallbackDist)
-                    : fallbackDist;
-                store._distVal = dist;
+                let dist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
+              store._distVal = dist;
                 let travelCost = window.getTravelCost ? window.getTravelCost(dist) : (dist <= 0.5) ? 5 : (dist <= 1) ? 15 : (dist <= 2) ? 25 : (dist <= 3) ? 35 : (dist <= 4) ? 40 : (dist <= 5) ? 50 : (dist <= 6) ? 55 : (dist <= 7) ? 60 : (dist <= 8) ? 70 : (dist <= 9) ? 85 : (dist <= 10) ? 100 : (dist <= 15) ? 200 : (dist <= 20) ? 300 : (dist <= 50) ? 1000 : 2000;
-                let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
-                store.effectivePrice = totalBill + travelCost;
-            }
+let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+store.effectivePrice = totalBill + travelCost;
+            });
             storesArray.sort((a, b) => {
     if (sortModeList === 'near') {
         return a._distVal - b._distVal;
@@ -135,7 +131,9 @@ const seenNames = new Set();
             const descLines = (row.getAttribute('data-desc') || "").toLowerCase().split('\n').map(l => l.trim());
             const prodSizes = descLines.filter(l => l.startsWith('@')).map(l => l.substring(1).toUpperCase());
             const prodGenders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1).toLowerCase());
-            const prodAges = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1).toLowerCase());
+          const prodAges = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1).toLowerCase());
+            const prodTags = descLines.filter(l => l.startsWith('#')).map(l => l.substring(1).toLowerCase());  
+          
 
             let isMatch = totalSearched === 0 || searchTerms.some(term => {
                 const parts = term.split(/\s+/);
@@ -146,7 +144,9 @@ const seenNames = new Set();
                 const ageFilter = (() => { for(const p of parts){ if(/^\d+years?$/.test(p)) return p.replace(/years?/,''); if(/^\d+$/.test(p) && parseInt(p)<100) return p; } return null; })();
                 const price = parseFloat(row.getAttribute('data-price') || 0);
 
-                if (!pName.includes(mainWord)) return false;
+                const nameMatch = pName.startsWith(mainWord);
+                const tagMatch = !nameMatch && prodTags.some(t => t.startsWith(mainWord));
+                if (!nameMatch && !tagMatch) return false;
                 if (price > maxPrice) return false;
                 if (sizeFilter && !prodSizes.includes(sizeFilter)) return false;
                 if (genderFilter && !prodGenders.some(g => g.includes(genderFilter))) return false;
@@ -165,13 +165,20 @@ row.style.display = isMatch ? 'flex' : 'none';
         });
 
         if (totalSearched === 0) {
-            card.style.display = 'block';
-        } else if (foundTerms.size > 0 || (totalSearched > 0 && cardTotal > 0)) {
-            card.style.display = 'block';
-            card.querySelectorAll('strong')[0].innerText = '₹' + cardTotal;
-            card.querySelectorAll('strong')[1].innerText = foundTerms.size + '/' + totalSearched;
-        } else {
-            card.style.display = 'none';
+    card.style.display = 'block';
+} else if (foundTerms.size > 0 || (totalSearched > 0 && cardTotal > 0)) {
+    card.style.display = 'block';
+    card.querySelectorAll('strong')[0].innerText = '₹' + cardTotal;
+    card.querySelectorAll('strong')[1].innerText = foundTerms.size + '/' + totalSearched;
+} else {
+    // 🔥 Match nahi mila → FIR BHI CARD DIKHAO!
+    card.style.display = 'block';
+    // Saare items visible karo
+    card.querySelectorAll('.item-row').forEach(row => row.style.display = 'flex');
+    // Total bill dikhao
+    const originalTotal = card.querySelectorAll('.stats-box strong')[0]?.innerText || '₹0';
+    card.querySelectorAll('strong')[0].innerText = originalTotal;
+    card.querySelectorAll('strong')[1].innerText = '0/' + totalSearched;
         }
     });
 
@@ -238,8 +245,7 @@ function showSuggestions(val) {
     }
 
     Array.from(document.querySelectorAll('.item-row')).forEach(row => {
-        const pName = row.querySelector('span:first-child')?.innerText.trim() || "";
-        if (!pName.toLowerCase().includes(mainWord)) return;
+        const realName = row.querySelector('span:first-child')?.innerText.trim() || "";
 
         const desc = (row.getAttribute('data-desc') || "").toLowerCase();
         const price = parseFloat(row.getAttribute('data-price') || 0);
@@ -247,9 +253,22 @@ function showSuggestions(val) {
         const sizes = descLines.filter(l => l.startsWith('@')).map(l => l.substring(1));
         const genders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1));
         const ages = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1));
+        const tags = descLines.filter(l => l.startsWith('#')).map(l => l.substring(1));
         const priceSteps = [100,200,300,500,1000,2000,5000].filter(s => price < s);
 
-        if (!fw) { addSug(pName); return; }
+       const nameMatch = realName.toLowerCase().startsWith(mainWord);
+        const matchingTag = tags.find(t => t.startsWith(mainWord));
+        if (!nameMatch && !matchingTag) return;
+
+        // Jo match hua usi ko display naam banao
+        const pName = (!nameMatch && matchingTag) 
+            ? matchingTag.charAt(0).toUpperCase() + matchingTag.slice(1) 
+            : realName;
+
+        if (!fw) {
+            addSug(pName);
+            return;
+        }
 
         // "f" ya "for" → gender
         if (fw.startsWith('f')) {

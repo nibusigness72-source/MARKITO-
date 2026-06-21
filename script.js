@@ -1,7 +1,7 @@
 // हिस्सा 1: बटन नेविगेशन (HOME और ACCOUNT के लिए)
 const homeBtn = document.getElementById('home-btn');
 if (homeBtn) {
-    homeBtn.onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    homeBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 const accountBtn = document.getElementById('account-btn');
@@ -347,11 +347,7 @@ document.addEventListener('click', function(e) {
 // ====================================================================
 document.addEventListener('click', function(e) {
     
-    // 1. DETAILS बटन के लिए
-    if (e.target.innerText && e.target.innerText.includes("Details")) {
-        window.location.href = 'details.html';
-        return;
-    }
+
 
     // 2. Create Account बटन के लिए
     if (e.target.closest('.alt-color')) {
@@ -360,39 +356,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-function toggleMsgBox() {
-    let box = document.getElementById('msg-container');
-    const locBar = document.querySelector('.location-bar');
-    const sBox = document.getElementById('search-box'); // 👈 सर्च बॉक्स को पकड़ने के लिए
-    
-    if (box.style.display === "none" || box.style.display === "") {
-        box.style.display = "flex"; 
-        
-        // ⬇️ मैसेज बॉक्स खुलते ही लोकेशन और सर्च बॉक्स दोनों को छुपा दो
-        if (locBar) locBar.style.display = "none";
-        if (sBox) sBox.style.display = "none";
-    } else {
-        box.style.display = "none";
-        
-        // ⬇️ मैसेज बॉक्स बंद होते ही दोनों को वापस दिखाओ
-        if (locBar) locBar.style.display = "flex";
-        if (sBox) sBox.style.display = "flex";
-    }
-}
-
-
-
-function bhejoMessage() {
-    let sandesh = document.getElementById('user-msg').value;
-    if (sandesh.trim() === "") {
-        alert("write some message");
-        return;
-    }
-    console.log("Feedback Sent: ", sandesh);
-    alert("Sasta Store: Feedback Successful!");
-    document.getElementById('user-msg').value = ""; 
-    toggleMsgBox(); 
-}
 // यह फंक्शन अभी सिर्फ टेस्टिंग के लिए है
 function handleCreateAccount() {
     // यहाँ Google की लिस्ट खुलेगी

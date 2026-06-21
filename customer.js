@@ -58,7 +58,7 @@ function fetchStoresFromFirebase() {
         return;
     }
     
-firebase.database().ref('stores').on('value', async (snapshot) => {
+    firebase.database().ref('stores').on('value', (snapshot) => {
         const sections = document.querySelectorAll('.product-list');
         if (sections.length === 0) return;
 
@@ -70,22 +70,20 @@ firebase.database().ref('stores').on('value', async (snapshot) => {
 
         if (snapshot.exists()) {
             const stores = snapshot.val();
-            for (const storeId of Object.keys(stores)) {
+for (let storeId in stores) {
                 // Purana wala code wapas aa gaya
                 const rootData = stores[storeId] || {};
-                if (!isStoreOpenNow(rootData)) continue;
+  if (!isStoreOpenNow(rootData)) continue;
                 const productsObj = rootData.products; 
-                // सीधे मुख्य नोड से प्रोडक्ट्स उठाओ
+ // सीधे मुख्य नोड से प्रोडक्ट्स उठाओ
 
-                // 📍 सीधे मुख्य नोड (stores/UID) से नाम और लोकेशन निकालना
-                const storeLat = rootData.location?.latitude || null; 
-                const storeLon = rootData.location?.longitude || null;
-                const finalStoreName = rootData.shopName || "सस्ता स्टोर लोकल शॉप";
+    // 📍 सीधे मुख्य नोड (stores/UID) से नाम और लोकेशन निकालना
+    const storeLat = rootData.location?.latitude || null; 
+    const storeLon = rootData.location?.longitude || null;
+    const finalStoreName = rootData.shopName || "सस्ता स्टोर लोकल शॉप";
 
-                const fallbackDist = calculateDistance(userLatitude, userLongitude, storeLat, storeLon);
-                const distance = window.getRoadDistance 
-                    ? await window.getRoadDistance(userLatitude, userLongitude, storeLat, storeLon, fallbackDist)
-                    : fallbackDist;
+       
+                const distance = calculateDistance(userLatitude, userLongitude, storeLat, storeLon);
 
                 if (productsObj) {
                     let storeProducts = [];
@@ -214,7 +212,14 @@ const filterWords = parts.slice(1).join(' '); // baaki = filter
 // Step 2: Matching products dhundho
 const matchingProds = localProductsArray.filter(prod => {
     const pName = (prod.productName || "").toLowerCase();
-    return pName.includes(mainWord);
+    const desc = (prod.description || "").toLowerCase();
+    const tags = desc.split('\n').filter(l => l.trim().startsWith('#')).map(l => l.substring(1).trim().toLowerCase());
+    
+    // 🔥 Pehle TAGS check karo, phir Name
+    const nameMatch = pName.toLowerCase().startsWith(mainWord);
+    const tagMatch = !nameMatch && tags.some(t => t.startsWith(mainWord));
+    
+    return tagMatch || nameMatch;  // ✅ Tags ko priority!
 });
 
 if (matchingProds.length === 0) {
@@ -224,8 +229,15 @@ if (matchingProds.length === 0) {
 
 // Step 3: Filter ke hisab se suggestions banao
 matchingProds.forEach(prod => {
-    const pName = prod.productName;
+    const realName = prod.productName;
     const desc = (prod.description || "").toLowerCase();
+    const allTagsForMatch = desc.split('\n').filter(l => l.trim().startsWith('#')).map(l => l.substring(1).trim());
+    const nameMatchesSearch = realName.toLowerCase().startsWith(mainWord);
+    const matchedTagForName = allTagsForMatch.find(t => t.toLowerCase().startsWith(mainWord));
+    // Jo bhi match hua use hi display naam banao - agar naam match hua to naam, warna tag
+    const pName = (!nameMatchesSearch && matchedTagForName) 
+        ? matchedTagForName.charAt(0).toUpperCase() + matchedTagForName.slice(1) 
+        : realName;
     const price = parseFloat(prod.price || 0);
     const descLines = desc.split('\n').map(l => l.trim()).filter(l => l);
 
@@ -247,7 +259,16 @@ matchingProds.forEach(prod => {
 
     // Filter nahi - sirf naam
     if (!fw) {
-        addSug(pName);
+        if (pName.toLowerCase().startsWith(mainWord)) {
+            // Naam match hua - naam suggest karo
+            addSug(pName);
+        } else {
+            // Naam match nahi hua, matlab tag se match hua - woh tag suggest karo
+            const matchingTag = tags.find(t => t.startsWith(mainWord));
+            if (matchingTag) {
+                addSug(matchingTag.charAt(0).toUpperCase() + matchingTag.slice(1));
+            }
+        }
         return;
     }
 
@@ -423,7 +444,16 @@ const parts = searchKey.split(/\s+/);
         const prodGenders = descLines.filter(l => l.startsWith('&')).map(l => l.substring(1).toLowerCase());
         const prodAges = descLines.filter(l => l.startsWith('/')).map(l => l.substring(1).toLowerCase());
 
-        if (!pName.includes(mainWord)) return false;
+        
+// ✅ Naya:
+const customTags = descLines.filter(l => l.startsWith('#')).map(l => l.substring(1).toLowerCase());
+
+// 🔥 Pehle TAGS check karo, phir Name
+const tagMatch = customTags.some(t => t.includes(mainWord) || mainWord.includes(t));
+const nameMatch = pName.includes(mainWord);
+
+if (!tagMatch && !nameMatch) return false;  // ✅ Tags ko priority!
+      
         if (price > maxPrice) return false;
         if (sizeFilter && !prodSizes.includes(sizeFilter)) return false;
         if (genderFilter && !prodGenders.some(g => g.includes(genderFilter))) return false;
@@ -443,14 +473,43 @@ filteredResults.sort((a, b) => {
 });
 
     if(filteredResults.length === 0) {
-        sections[0].innerHTML = `<p style="text-align:center; color:#d32f2f; width:100%; font-weight:bold; margin-top:20px;"> No results/p>`;
+        // Kuch match nahi mila - isliye sabse paas/sasta wala saara saman dikhao (jaise Flipkart karta hai)
+        
+        
+        let allFallback = [...localProductsArray];
+        allFallback.sort((a, b) => {
+            if (sortMode === 'near') return a.distance - b.distance;
+            return getSmartScore(a) - getSmartScore(b);
+        });
+        
+        allFallback.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.setAttribute('data-storeid', product.storeId);
+            productCard.setAttribute('data-prodname', product.productName);
+
+            const googleMapUrl = `https://www.google.com/maps?q=${product.lat},${product.lon}`;
+            let distanceTxt = product.distance === 99999 ? "📍 Location Off" : (product.distance < 1 ? `${(product.distance * 1000).toFixed(0)} m` : `${product.distance.toFixed(1)} km`);
+
+            productCard.innerHTML = `
+                <img src="${product.photo || 'rasgulla.jpg'}" alt="${product.productName}">
+                <div class="product-info">
+                    <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
+                    <span class="product-price" style="color: #2e7d32; font-weight:bold;">₹${product.price}</span>
+                    <span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
+                    <span class="distance">📍 ${distanceTxt}</span>
+                    <a href="${googleMapUrl}" target="_blank" class="map-btn">Map on 📍</a>
+                </div>
+            `;
+            sections[0].appendChild(productCard);
+        });
         return;
     }
 
     // बैकग्राउंड में सर्च किए गए पहले सामान की कैटेगरी को पकड़ो
     const matchedCategory = filteredResults[0].category || ""; 
 
-    // [A] सबसे ऊपर सर्च वाला सामान दिखाओ
+// [A] सबसे ऊपर सर्च वाला सामान दिखाओ
     filteredResults.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
@@ -475,8 +534,7 @@ productCard.setAttribute('data-prodname', product.productName);
         `;
         sections[0].appendChild(productCard);
     });
-
-    // [B] बिना हेडिंग के चुपचाप उसी कैटेगरी का बाकी सामान नीचे लोड करो
+// [B] बिना हेडिंग के चुपचाप उसी कैटेगरी का बाकी सामान नीचे लोड करो
     localProductsArray.forEach(product => {
         const pName = product.productName ? product.productName.toLowerCase() : "";
         const cleanProdName = pName.replace(/\s+/g, ''); 
@@ -668,7 +726,6 @@ function getTravelCost(distance) {
     if (distance <= 50) return 1000;
     return 2000;
 }
-
 function getSmartScore(prod) {
     const price = parseFloat(prod.price || 0);
     const travelCost = getTravelCost(prod.distance);

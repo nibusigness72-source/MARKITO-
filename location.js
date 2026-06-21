@@ -1,4 +1,23 @@
-function handleLocationSystem(manualStatus) {
+async function getRealLocationName(lat, lon) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const addr = data.address || {};
+        const area = addr.suburb || addr.village || addr.town || addr.city || addr.county || addr.hamlet || addr.locality || "";
+        const state = addr.state || addr.state_district || "";
+        if (area && state) return `${area}, ${state}`;
+        if (data.display_name) {
+            // Agar exact field nahi mila to display_name ka first 2 part use karo
+            const parts = data.display_name.split(',').map(p => p.trim());
+            return parts.slice(0, 2).join(', ');
+        }
+        return "Location mil gayi";
+    } catch (e) {
+        return "Semapur, Bihar";
+    }
+}
+async function handleLocationSystem(manualStatus, lat, lon) {
     // 🛑 नया पक्का पहरेदार: अगर सर्च पर्दा, मैसेज बॉक्स या 6 डिब्बे वाला ADD ओवरले खुला है, तो ब्लर तुरंत हटाओ
     const isSearchOpen = document.getElementById('safed-parda') && document.getElementById('safed-parda').style.display === "block";
     const isMsgOpen = document.getElementById('msg-container') && document.getElementById('msg-container').style.display === "flex";
@@ -25,7 +44,15 @@ function handleLocationSystem(manualStatus) {
             locBar.style.border = "1px solid #ddd";
             locBar.style.animation = "none";
         }
-        if(locText) locText.innerText = "Semapur, Bihar";
+        if(locText) {
+            if (lat && lon) {
+                locText.innerText = "Location dhund rahe hain...";
+                const realPlace = await getRealLocationName(lat, lon);
+                locText.innerText = realPlace;
+            } else {
+                locText.innerText = "Semapur, Bihar";
+            }
+        }
         if(locBtn) {
             locBtn.innerText = "ON";
             locBtn.style.background = "#2e7d32";
@@ -43,7 +70,13 @@ function handleLocationSystem(manualStatus) {
         if(locBtn) {
             locBtn.innerText = "OFF";
             locBtn.style.background = "#ff5252";
-            locBtn.onclick = () => handleLocationSystem("ON");
+            locBtn.onclick = () => {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    handleLocationSystem("ON", position.coords.latitude, position.coords.longitude);
+                }, () => {
+                    handleLocationSystem("ON");
+                });
+            };
         }
     }
 }
@@ -66,7 +99,7 @@ window.addEventListener('load', () => {
                 
                 // तुरंत असली जीपीएस एक्टिव करके ऐप को ON मोड में खोलें
                 navigator.geolocation.getCurrentPosition((position) => {
-                    handleLocationSystem("ON");
+                    handleLocationSystem("ON", position.coords.latitude, position.coords.longitude);
                 }, () => {
                     // अगर किसी एरर की वजह से लोकेशन न मिले तो ही बंद करें
                     handleLocationSystem("OFF");

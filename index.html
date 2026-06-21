@@ -7,33 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="style.css">
 </head>
-<div id="msg-btn" onclick="toggleMsgBox()">
-    <i class="fa fa-pencil"></i>
-</div>
-
-<div id="msg-container" style="display:none;">
-    <div class="sasta-header">
-        <button onclick="toggleMsgBox()" class="back-circle">←</button>
-        <h1 class="sasta-logo">write text (1000)</h1>
-    </div>
-    
-    <div class="sasta-body">
-        <h2 class="watt-text">write....</h2>
-        <textarea id="user-msg" maxlength="1000" placeholder=" "></textarea>
-    </div>
-
-    <div class="sasta-footer" onclick="bhejoMessage()">
-        <div class="footer-box">
-            <i class="fa fa-bars"></i>
-            <span class="footer-txt">send feedback</span>
-            <i class="fa fa-paper-plane"></i>
-        </div>
-    </div>
-</div>
-
 
 <body>
-  <div id="app-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 99999; flex-direction: column; align-items: center; justify-content: center;">
+  <div id="app-loader" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 99999; flex-direction: column; align-items: center; justify-content: center;">
     
     <div class="spinner" style="width: 3.5rem; height: 3.5rem; border: 0.35rem solid #f3f3f3; border-top: 0.35rem solid #2e7d32; border-radius: 50%; animation: spin 1s linear infinite;"></div>
     
@@ -274,8 +250,7 @@
 <script src="location.js"></script>
 <script src="algocategory.js"></script>
   <script src="storestatus.js"></script>
-  <script src="api.js"></script>
-<script src="customer.js"></script>
+<script src="customer.js"></scrip>
 
 <div id="page-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:9999; overflow-y:auto; -webkit-overflow-scrolling:touch;">
 </div>
