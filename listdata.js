@@ -49,8 +49,11 @@ store.effectivePrice = totalBill + travelCost;
     return a.effectivePrice - b.effectivePrice;
 });
 
+            // 🎯 Bina search ke sirf top 4 dukaan dikhao
+            const defaultStoresArray = storesArray.slice(0, 4);
+
             // 2. अब सिर्फ इस सॉर्टेड लिस्ट को लूप करें (पुराना 'for in' लूप हटा दिया)
-            storesArray.forEach((store) => {
+            defaultStoresArray.forEach((store) => {
                 const storeId = store.id;
                 const productsArray = Object.values(store.products || {});
                 if (productsArray.length === 0) return;
@@ -59,7 +62,8 @@ store.effectivePrice = totalBill + travelCost;
                 const distText = dist < 1 ? (dist * 1000).toFixed(0) + " m" : dist.toFixed(1) + " km";
                 const shopName = store.shopName || "सस्ता स्टोर";
                 const photo = (store.photos && store.photos[0]) ? store.photos[0] : 'rasgulla.jpg';
-                const totalBill = productsArray.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                const firstVisibleProduct = productsArray.find(p => p.stockStatus !== "Out of Stock");
+                const totalBill = firstVisibleProduct ? parseFloat(firstVisibleProduct.price || 0) : 0;
                 const availableCount = productsArray.filter(p => p.stockStatus !== "Out of Stock").length;
                 
                 const card = document.createElement('div');
@@ -160,7 +164,12 @@ if (isMatch) seenNames.add(rowName);
 row.style.display = isMatch ? 'flex' : 'none';
             if (isMatch) {
                 cardTotal += pPrice;
-                searchTerms.forEach(term => { if(isMatch) foundTerms.add(term); });
+                searchTerms.forEach(term => {
+                    const mainWord = term.split(/\s+/)[0];
+                    if (pName.startsWith(mainWord) || prodTags.some(t => t.startsWith(mainWord))) {
+                        foundTerms.add(term);
+                    }
+                });
             }
         });
 
@@ -171,23 +180,18 @@ row.style.display = isMatch ? 'flex' : 'none';
     card.querySelectorAll('strong')[0].innerText = '₹' + cardTotal;
     card.querySelectorAll('strong')[1].innerText = foundTerms.size + '/' + totalSearched;
 } else {
-    // 🔥 Match nahi mila → FIR BHI CARD DIKHAO!
-    card.style.display = 'block';
-    // Saare items visible karo
-    card.querySelectorAll('.item-row').forEach(row => row.style.display = 'flex');
-    // Total bill dikhao
-    const originalTotal = card.querySelectorAll('.stats-box strong')[0]?.innerText || '₹0';
-    card.querySelectorAll('strong')[0].innerText = originalTotal;
-    card.querySelectorAll('strong')[1].innerText = '0/' + totalSearched;
+    card.style.display = 'none';
         }
     });
 
     // सर्च के बाद सॉर्टिंग
     const container = document.querySelector('.container');
-    const allCards = Array.from(container.querySelectorAll('.store-card'));
+   const allCards = Array.from(container.querySelectorAll('.store-card'));
 const visibleCards = allCards.filter(c => c.style.display !== 'none');
 const hiddenCards = allCards.filter(c => c.style.display === 'none');
-visibleCards.sort((a, b) => {
+
+// 🎯 Step 1: price+distance ke hisab se compare karne wala function
+function priceDistCompare(a, b) {
     const distA = parseFloat(a.getAttribute('data-distance-km') || 0);
     const distB = parseFloat(b.getAttribute('data-distance-km') || 0);
 
@@ -200,8 +204,29 @@ visibleCards.sort((a, b) => {
     const costA = (distA<=0.5)?5:(distA<=1)?15:(distA<=2)?25:(distA<=3)?35:(distA<=4)?40:(distA<=5)?50:(distA<=6)?55:(distA<=7)?60:(distA<=8)?70:(distA<=9)?85:(distA<=10)?100:(distA<=15)?200:(distA<=20)?300:(distA<=50)?1000:2000;
     const costB = (distB<=0.5)?5:(distB<=1)?15:(distB<=2)?25:(distB<=3)?35:(distB<=4)?40:(distB<=5)?50:(distB<=6)?55:(distB<=7)?60:(distB<=8)?70:(distB<=9)?85:(distB<=10)?100:(distB<=15)?200:(distB<=20)?300:(distB<=50)?1000:2000;
     return (priceA + costA) - (priceB + costB);
+}
+
+// 🎯 Step 2: match-count ke hisab se groups banao
+const matchGroups = {};
+visibleCards.forEach(c => {
+    const matchCount = parseInt((c.querySelectorAll('strong')[1]?.innerText || '0/0').split('/')[0]) || 0;
+    if (!matchGroups[matchCount]) matchGroups[matchCount] = [];
+    matchGroups[matchCount].push(c);
 });
-[...visibleCards, ...hiddenCards].forEach(c => container.appendChild(c));
+
+// 🎯 Step 3: har group ke andar price+distance se sort karo, top 3 hi rakho
+const sortedKeys = Object.keys(matchGroups).map(Number).sort((a, b) => b - a); // zyada match pehle
+let finalVisibleOrder = [];
+sortedKeys.forEach(key => {
+    const group = matchGroups[key];
+    group.sort(priceDistCompare);
+    const top3 = group.slice(0, 3);
+    const rest = group.slice(3);
+    finalVisibleOrder.push(...top3);
+    rest.forEach(c => c.style.display = 'none'); // top 3 ke baad wali hide karo
+});
+const visibleCardsFinal = finalVisibleOrder;
+[...visibleCardsFinal, ...hiddenCards].forEach(c => container.appendChild(c));
 }
 
 
