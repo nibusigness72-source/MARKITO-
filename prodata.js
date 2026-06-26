@@ -33,72 +33,51 @@ function triggerProductPhotoUpload(photoNum = 'main') {
     
     fileInput.click();
     
-    fileInput.onchange = function(e) {
+        fileInput.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
         
         const reader = new FileReader();
         reader.onload = function(event) {
-            const base64 = event.target.result;
-            
-            if (photoNum === 'main') {
-                // MAIN PHOTO - Compress करेंगे
-                const img = new Image();
-                img.onerror = function() {
-                    console.error("Image load error");
-                    alert("फोटो लोड नहीं हो सकी। दोबारा कोशिश करें।");
-                };
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const max_width = 500;
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > max_width) {
-                        height = Math.round((height * max_width) / width);
-                        width = max_width;
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.fillStyle = "#FFFFFF";
-                    ctx.fillRect(0, 0, width, height);
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    currentProductPhotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    
-                    // Preview दिखाओ
-                    const formPhotoBox = document.getElementById('formPhotoPreview') || document.querySelector('.upload-box');
-                    if (formPhotoBox) {
-                        formPhotoBox.innerHTML = `
-                            <div style="width:120px; height:120px; margin:0 auto; overflow:hidden; border-radius:10px;">
-                                <img src="${currentProductPhotoBase64}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Crect fill=%27%23ddd%27 width=%27120%27 height=%27120%27/%3E%3C/svg%3E'">
-                            </div>
-                            <p style="color:#28a745; font-weight:bold; margin-top:5px;">Photo Loaded! ✅</p>
-                        `;
-                    }
-                    console.log("✅ Main photo compressed और ready!");
-                };
-                img.src = base64;
-            } else {
-                // GALLERY PHOTOS (p1 to p10) - No compress, direct save
-                console.log("📸 Gallery photo " + photoNum + " upload हो रही है...");
+            const img = new Image();
+            img.onload = function() {
+                // ⚡ कैन्वस बनाकर साइज छोटा करने का लॉजिक
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
                 
-                // पहले preview दिखाओ
-                const targetBox = document.getElementById('p-box-' + photoNum);
-                if (targetBox) {
-                    targetBox.innerHTML = `
-                        <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;" 
-                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23ddd%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
-                    `;
+                // फ्लिपकार्ट स्टाइल में 300x300 साइज फिक्स
+                canvas.width = 300;
+                canvas.height = 300;
+                
+                // इमेज को ड्रा करो
+                ctx.drawImage(img, 0, 0, 300, 300);
+                
+                // Quality को 0.4 (40%) कर दिया जिससे फोटो 15-20 KB की हो जाएगी!
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.4);
+                
+                // प्रीव्यू डिब्बे में दिखाओ
+                const previewImg = document.getElementById('productFormPhotoPreview');
+                if (previewImg) {
+                    previewImg.src = compressedBase64;
+                    previewImg.style.display = 'block';
                 }
                 
-                // फिर database में save करो
-                savePhotoToDatabase(photoNum, base64);
-            }
+                if (window.selectedPhotoIndex === 'main') {
+                    currentProductPhotoBase64 = compressedBase64;
+                    console.log("📸 Main Photo Compressed to 15KB successfully!");
+                } else {
+                    const idx = parseInt(window.selectedPhotoIndex);
+                    if (!isNaN(idx)) {
+                        uploadedPhotoURLs[idx] = compressedBase64;
+                        console.log(`📸 Sub Photo ${idx} Compressed!`);
+                    }
+                }
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     };
+                
 }
 
 // 3️⃣ डेटाबेस में गैलरी फोटो सेव करना (Async properly)
