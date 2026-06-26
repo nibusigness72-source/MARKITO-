@@ -18,6 +18,7 @@ function openProductForm(boxIndex) {
 }
 
 // 2️⃣ MAIN PHOTO UPLOAD + COMPRESS (सिर्फ एक बार, cleaned up)
+// 📦 1. प्रोडक्ट की मेन फोटो को सुपर कंप्रेस करने वाला फंक्शन
 function triggerProductPhotoUpload(photoNum = 'main') {
     window.selectedPhotoIndex = photoNum; 
     
@@ -39,67 +40,45 @@ function triggerProductPhotoUpload(photoNum = 'main') {
         
         const reader = new FileReader();
         reader.onload = function(event) {
-            const base64 = event.target.result;
-            
-            if (photoNum === 'main') {
-                // MAIN PHOTO - Compress करेंगे
-                const img = new Image();
-                img.onerror = function() {
-                    console.error("Image load error");
-                    alert("फोटो लोड नहीं हो सकी। दोबारा कोशिश करें।");
-                };
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const max_width = 500;
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > max_width) {
-                        height = Math.round((height * max_width) / width);
-                        width = max_width;
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.fillStyle = "#FFFFFF";
-                    ctx.fillRect(0, 0, width, height);
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    currentProductPhotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    
-                    // Preview दिखाओ
-                    const formPhotoBox = document.getElementById('formPhotoPreview') || document.querySelector('.upload-box');
-                    if (formPhotoBox) {
-                        formPhotoBox.innerHTML = `
-                            <div style="width:120px; height:120px; margin:0 auto; overflow:hidden; border-radius:10px;">
-                                <img src="${currentProductPhotoBase64}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Crect fill=%27%23ddd%27 width=%27120%27 height=%27120%27/%3E%3C/svg%3E'">
-                            </div>
-                            <p style="color:#28a745; font-weight:bold; margin-top:5px;">Photo Loaded! ✅</p>
-                        `;
-                    }
-                    console.log("✅ Main photo compressed और ready!");
-                };
-                img.src = base64;
-            } else {
-                // GALLERY PHOTOS (p1 to p10) - No compress, direct save
-                console.log("📸 Gallery photo " + photoNum + " upload हो रही है...");
+            const img = new Image();
+            img.onload = function() {
+                // ⚡ कैन्वस कंप्रेसर - फ्लिपकार्ट स्टाइल (300x300 पिक्सेल फिक्स)
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
                 
-                // पहले preview दिखाओ
-                const targetBox = document.getElementById('p-box-' + photoNum);
-                if (targetBox) {
-                    targetBox.innerHTML = `
-                        <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;" 
-                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23ddd%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
-                    `;
+                canvas.width = 300;
+                canvas.height = 300;
+                
+                // फोटो को चौकोर फ्रेम में ड्रा करो
+                ctx.drawImage(img, 0, 0, 300, 300);
+                
+                // क्वालिटी सीधे 0.3 (30%) कर दी ताकि साइज 10-15 KB हो जाए!
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.3);
+                
+                // स्क्रीन पर तुरंत प्रीव्यू दिखाओ
+                const previewImg = document.getElementById('productFormPhotoPreview');
+                if (previewImg) {
+                    previewImg.src = compressedBase64;
+                    previewImg.style.display = 'block';
                 }
                 
-                // फिर database में save करो
-                savePhotoToDatabase(photoNum, base64);
-            }
+                // ग्लोबल वेरिएबल में सेव करो ताकि डेटाबेस में यही जाए
+                if (window.selectedPhotoIndex === 'main' || photoNum === 'main') {
+                    currentProductPhotoBase64 = compressedBase64;
+                    console.log("🎯 प्रोडक्ट की मेन फोटो एकदम हल्की (10-15KB) सेव हो गई!");
+                } else {
+                    const idx = parseInt(window.selectedPhotoIndex || photoNum);
+                    if (!isNaN(idx)) {
+                        uploadedPhotoURLs[idx] = compressedBase64;
+                    }
+                }
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     };
 }
+
 
 // 3️⃣ डेटाबेस में गैलरी फोटो सेव करना (Async properly)
 function savePhotoToDatabase(photoNum, base64) {
@@ -325,4 +304,58 @@ document.addEventListener('DOMContentLoaded', () => {
 // 9️⃣ Utility: Product को save करने वाला wrapper
 function saveProductToDatabase() {
     submitProductToDatabase();
+}
+
+// 🏪 नीलेश भाई का दुकान की गैलरी/एल्बम फोटो को सुपर कंप्रेस करने वाला फंक्शन
+function uploadShopPhotos(photoIndex) {
+    window.selectedPhotoIndex = photoIndex;
+    
+    let fileInput = document.getElementById('shopGalleryFileInput');
+    if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'shopGalleryFileInput';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+    }
+    
+    fileInput.click();
+    
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                // ⚡ कैन्वस कंप्रेसर - साइज 300x300 पिक्सल्स फिक्स
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = 300;
+                canvas.height = 300;
+                
+                ctx.drawImage(img, 0, 0, 300, 300);
+                
+                // क्वालिटी को सीधे 30% (0.3) कर दिया ताकि फोटो का साइज 10-15 KB हो जाए
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.3);
+                
+                // मर्चेंट पैनल के बॉक्स में फोटो सेट करो
+                const box = document.getElementById('photo-box-' + photoIndex);
+                if (box) {
+                    box.innerHTML = `<img src="${compressedBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">`;
+                }
+                
+                // एरे (Array) में सेव करो ताकि फायरबेस में अपलोड हो सके
+                if (typeof uploadedPhotoURLs !== 'undefined') {
+                    uploadedPhotoURLs[photoIndex] = compressedBase64;
+                }
+                console.log(`🎯 गैलरी फोटो नंबर ${photoIndex} एकदम हल्की कंप्रेस हो गई!`);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
 }
