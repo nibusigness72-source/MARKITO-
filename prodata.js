@@ -81,20 +81,43 @@ function triggerProductPhotoUpload(photoNum = 'main') {
                 };
                 img.src = base64;
             } else {
-                // GALLERY PHOTOS (p1 to p10) - No compress, direct save
-                console.log("📸 Gallery photo " + photoNum + " upload हो रही है...");
-                
-                // पहले preview दिखाओ
-                const targetBox = document.getElementById('p-box-' + photoNum);
-                if (targetBox) {
-                    targetBox.innerHTML = `
-                        <img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;" 
-                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23ddd%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
-                    `;
-                }
-                
-                // फिर database में save करो
-                savePhotoToDatabase(photoNum, base64);
+                // GALLERY PHOTOS (p1 to p10) - Ab compress hoga!
+                console.log("📸 Gallery photo " + photoNum + " compress ho rahi hai...");
+
+                const galleryImg = new Image();
+                galleryImg.onload = function() {
+                    const gCanvas = document.createElement('canvas');
+                    const gCtx = gCanvas.getContext('2d');
+                    const g_max_width = 500;
+                    let gWidth = galleryImg.width;
+                    let gHeight = galleryImg.height;
+
+                    if (gWidth > g_max_width) {
+                        gHeight = Math.round((gHeight * g_max_width) / gWidth);
+                        gWidth = g_max_width;
+                    }
+                    gCanvas.width = gWidth;
+                    gCanvas.height = gHeight;
+                    gCtx.fillStyle = "#FFFFFF";
+                    gCtx.fillRect(0, 0, gWidth, gHeight);
+                    gCtx.drawImage(galleryImg, 0, 0, gWidth, gHeight);
+
+                    const compressedGalleryBase64 = gCanvas.toDataURL('image/jpeg', 0.6);
+
+                    // Preview dikhao
+                    const targetBox = document.getElementById('p-box-' + photoNum);
+                    if (targetBox) {
+                        targetBox.innerHTML = `
+                            <img src="${compressedGalleryBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:5px;" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23ddd%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
+                        `;
+                    }
+
+                    // Database mein compressed wala save karo
+                    savePhotoToDatabase(photoNum, compressedGalleryBase64);
+                    console.log("✅ Gallery photo " + photoNum + " compressed!");
+                };
+                galleryImg.src = base64;
             }
         };
         reader.readAsDataURL(file);
