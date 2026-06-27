@@ -52,86 +52,57 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 // 3️⃣ Firebase se data live kheechna
-function fetchStoresFromFirebase() {
+
+         function fetchStoresFromFirebase() {
     if (typeof firebase === 'undefined') {
         console.error("Firebase load nahi hua hai Nilesh bhai!");
         return;
     }
     
-    firebase.database().ref('stores').on('value', (snapshot) => {
+    // 🎯 सीधे all_products नोड को सुनो
+    firebase.database().ref('all_products').on('value', (snapshot) => {
         const sections = document.querySelectorAll('.product-list');
         if (sections.length === 0) return;
 
-        // Purane dummy ya stale products ko saaf karein
         sections.forEach(sec => sec.innerHTML = "");
-        
-        allStoresData = [];
         localProductsArray = [];
+        let allProductsFlat = [];
 
         if (snapshot.exists()) {
-            const stores = snapshot.val();
-for (let storeId in stores) {
-                // Purana wala code wapas aa gaya
-                const rootData = stores[storeId] || {};
-  if (!isStoreOpenNow(rootData)) continue;
-                const productsObj = rootData.products; 
- // सीधे मुख्य नोड से प्रोडक्ट्स उठाओ
+            const products = snapshot.val();
+            
+            for (let prodId in products) {
+                const prod = products[prodId];
+                
+                // आउट ऑफ स्टॉक सामान को यहाँ भी बाईपास कर सकते हैं
+                if (prod.stockStatus === "Out of Stock") continue;
 
-    // 📍 सीधे मुख्य नोड (stores/UID) से नाम और लोकेशन निकालना
-    const storeLat = rootData.location?.latitude || null; 
-    const storeLon = rootData.location?.longitude || null;
-    const finalStoreName = rootData.shopName || "सस्ता स्टोर लोकल शॉप";
+                // सीधा लोकेशन और दूरी निकालो
+                const distance = calculateDistance(userLatitude, userLongitude, prod.lat, prod.lon);
+                
+                prod.productId = prodId;
+                prod.distance = distance;
+                prod.storeName = prod.shopName || "सस्ता स्टोर लोकल शॉप"; // आर्किटेक्चर के अनुसार
 
-       
-                const distance = calculateDistance(userLatitude, userLongitude, storeLat, storeLon);
-
-                if (productsObj) {
-                    let storeProducts = [];
-                    for (let boxKey in productsObj) {
-                        const prod = productsObj[boxKey];
-                        
-                        prod.storeName = finalStoreName;
-                        prod.storeId = storeId;
-                        prod.distance = distance;
-                        prod.lat = storeLat;
-                        prod.lon = storeLon;
-                        
-                        storeProducts.push(prod);
-                        localProductsArray.push(prod); 
-                    }
-
-                    if (storeProducts.length > 0) {
-                        allStoresData.push({
-                            storeId: storeId,
-                            storeName: finalStoreName,
-                            distance: distance,
-                            lat: storeLat,
-                            lon: storeLon,
-                            products: storeProducts 
-                        });
-                    }
-                }
+                localProductsArray.push(prod);
+                allProductsFlat.push(prod);
             }
 
-            // Doori ke hisab se sorting
-            // --- Naya Smart Sorting Logic ---
- // Ye part aapki file mein jahan sort ho raha hai, wahan replace karein
-let allProductsFlat = allStoresData.flatMap(s => s.products);
+            // सॉर्टिंग लॉजिक (स्मार्ट या नियर)
+            allProductsFlat.sort((a, b) => {
+                if (sortMode === 'near') {
+                    return a.distance - b.distance;
+                }
+                return getSmartScore(a) - getSmartScore(b);
+            });
 
-allProductsFlat.sort((a, b) => {
-    if (sortMode === 'near') {
-        return a.distance - b.distance;
-    }
-    return getSmartScore(a) - getSmartScore(b);
-});
-
-displayHomeProducts(allProductsFlat); // sorted list bhejo
-// Yahan ab sorted flat list bhejenge
+            displayHomeProducts(allProductsFlat);
         } else {
             sections[0].innerHTML = `<p style="text-align:center; color:#999; width:100%;">अभी कोई सामान लाइव नहीं है भाई!</p>`;
         }
     });
 }
+           
 
 // 4️⃣ Home Screen Layout Rendering
 function displayHomeProducts(storesList) {
@@ -731,4 +702,3 @@ function getSmartScore(prod) {
     const travelCost = getTravelCost(prod.distance);
     return price + travelCost;
 }
-

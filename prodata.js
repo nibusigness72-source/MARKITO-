@@ -157,24 +157,42 @@ function submitProductToDatabase() {
     const user = firebase.auth().currentUser;
     if (!user || !boxId) { alert("लॉगिन करें या बॉक्स चुनें!"); return; }
 
-    const productData = {
-        productName: document.getElementById('pName')?.value.trim(),
-        category: document.getElementById('pCategory')?.value,
-        price: document.getElementById('pPrice')?.value.trim(),
-        unit: document.getElementById('pUnit')?.value.trim(),
-        brand: document.getElementById('pBrand')?.value.trim(),
-        description: document.getElementById('pDesc')?.value.trim(),
-        stockStatus: document.getElementsByName('stock')[1].checked ? "Out of Stock" : "In Stock",
-        photo: currentProductPhotoBase64 || "no_image.jpg", // मेन फोटो
-        lastUpdate: new Date().toLocaleDateString('en-IN')
-    };
+    const productId = `${user.uid}_box_${boxId}`; // Unique Product ID
 
-    // अपडेट करें
-    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId).update(productData)
+    // पहले मर्चेंट की प्रोफाइल से दुकान का नाम और लोकेशन निकालें
+    firebase.database().ref('stores/' + user.uid).once('value').then((snapshot) => {
+        const storeInfo = snapshot.val() || {};
+        const shopName = storeInfo.shopName || "सस्ता स्टोर लोकल शॉप";
+        const lat = storeInfo.location?.latitude || null;
+        const lon = storeInfo.location?.longitude || null;
+
+        const productData = {
+            productName: document.getElementById('pName')?.value.trim(),
+            category: document.getElementById('pCategory')?.value,
+            price: document.getElementById('pPrice')?.value.trim(),
+            unit: document.getElementById('pUnit')?.value.trim(),
+            brand: document.getElementById('pBrand')?.value.trim(),
+            description: document.getElementById('pDesc')?.value.trim(),
+            stockStatus: document.getElementsByName('stock')[1].checked ? "Out of Stock" : "In Stock",
+            photo: currentProductPhotoBase64 || "no_image.jpg",
+            lastUpdate: new Date().toLocaleDateString('en-IN'),
+            storeId: user.uid,
+            shopName: shopName,
+            lat: lat,
+            lon: lon
+        };
+
+        // MULTI-PATH UPDATE: दोनों जगह एक साथ डेटा सेव (सिंक) होगा
+        const updates = {};
+        updates['stores/' + user.uid + '/products/box_' + boxId] = productData;
+        updates['all_products/' + productId] = productData;
+
+        return firebase.database().ref().update(updates);
+    })
     .then(() => {
-        alert("✅ प्रोडक्ट और जानकारी सेव हो गई!");
+        alert("✅ प्रोडक्ट दोनों जगह सुरक्षित रूप से सेव हो गया!");
         window.location.href = "account.html"; 
-    });
+    }).catch(err => console.error("Sync Error: ", err));
 }
 
 
@@ -300,9 +318,7 @@ function loadProductFormDataFromDatabase() {
 function deleteProductFromDatabase() {
     const urlParams = new URLSearchParams(window.location.search);
     const boxFromURL = urlParams.get('box');
-    if (boxFromURL !== null) {
-        currentSelectedBoxIndex = parseInt(boxFromURL);
-    }
+    if (boxFromURL !== null) currentSelectedBoxIndex = parseInt(boxFromURL);
 
     if (currentSelectedBoxIndex === null) {
         alert("कृपया पहले किसी एक प्रोडक्ट पर क्लिक करें!");
@@ -313,11 +329,15 @@ function deleteProductFromDatabase() {
     if (!user) return;
 
     if (confirm("क्या आप इस प्रोडक्ट को डिलीट करना चाहते हैं?")) {
-        firebase.database()
-            .ref('stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex)
-            .remove()
+        const productId = `${user.uid}_box_${currentSelectedBoxIndex}`;
+
+        const updates = {};
+        updates['stores/' + user.uid + '/products/box_' + currentSelectedBoxIndex] = null;
+        updates['all_products/' + productId] = null;
+
+        firebase.database().ref().update(updates)
             .then(() => {
-                alert("✅ प्रोडक्ट डिलीट हो गया! 🗑️");
+                alert("✅ प्रोडक्ट हर जगह से डिलीट हो गया! 🗑️");
                 window.location.href = "account.html"; 
             })
             .catch((error) => {
@@ -325,6 +345,7 @@ function deleteProductFromDatabase() {
             });
     }
 }
+
 
 // 8️⃣ Firebase listener + Auto-load on page load
 document.addEventListener('DOMContentLoaded', () => {
