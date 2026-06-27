@@ -77,22 +77,23 @@ card.setAttribute('data-category', allCategories);
                 card.setAttribute('data-distance-km', dist.toFixed(4));
                 
              let itemsHtml = "";
-let visibleIndex = 0;
-
-// Hamein baki ke products ko bina search kiye HTML mein load hi nahi karna hai speed ke liye
-productsArray.forEach((prod) => {
-    if (prod.stockStatus === "Out of Stock") return;
-    
-    // Sirf pehle product ka HTML banega aur loop ruk jayega
-    if (visibleIndex < 1) {
-        itemsHtml += `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}">
-            <span>${prod.productName}</span> 
-            <span>₹${prod.price}</span>
-        </div>`;
-        visibleIndex++;
-    }
-});
-
+                let visibleIndex = 0;
+                let hiddenDivOpened = false;
+                productsArray.forEach((prod) => {
+                    if (prod.stockStatus === "Out of Stock") return;
+                    let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
+                    if (visibleIndex < 1) {
+                        itemsHtml += rowHtml;
+                    } else {
+                        if (!hiddenDivOpened) {
+                            itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
+                            hiddenDivOpened = true;
+                        }
+                        itemsHtml += rowHtml;
+                    }
+                    visibleIndex++;
+                });
+                if (hiddenDivOpened) itemsHtml += `</div>`;   
 
                 card.innerHTML = `
                        <div class="store-top">
