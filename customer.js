@@ -2,6 +2,32 @@
 // 🛒 SASTA STORE - LIVE SYNCED CUSTOMER SYSTEM (🚨 NETLIFY FIXED)
 // ==========================================
 
+// ==========================================
+// 🌍 UNIVERSAL BATCH FETCHER
+// ==========================================
+let _lastFetchedKey = null;
+let _allBatchesLoaded = false;
+
+function fetchProductsBatch(batchSize, callback) {
+    let query = firebase.database().ref('all_products').orderByKey();
+    if (_lastFetchedKey) {
+        query = query.startAfter(_lastFetchedKey);
+    }
+    query.limitToFirst(batchSize).once('value', (snapshot) => {
+        const newProducts = [];
+        snapshot.forEach(child => {
+            const prod = child.val();
+            prod.productId = child.key;
+            newProducts.push(prod);
+            _lastFetchedKey = child.key;
+        });
+        if (newProducts.length < batchSize) {
+            _allBatchesLoaded = true;
+        }
+        callback(newProducts);
+    });
+}
+
 let sortMode = 'smart'; // 'smart' ya 'near'
 
 function setSortMode(mode) {
@@ -52,15 +78,29 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 // 3️⃣ Firebase se data live kheechna
-
-         function fetchStoresFromFirebase() {
+function fetchStoresFromFirebase() {
     if (typeof firebase === 'undefined') {
         console.error("Firebase load nahi hua hai Nilesh bhai!");
         return;
     }
-    
-    // 🎯 सीधे all_products नोड को सुनो
-    firebase.database().ref('all_products').on('value', (snapshot) => {
+
+    _lastFetchedKey = null;
+    _allBatchesLoaded = false;
+
+    fetchProductsBatch(8, (newProducts) => {
+        const snapshot = {
+            exists: () => true,
+            val: () => {
+                const obj = {};
+                newProducts.forEach(p => obj[p.productId] = p);
+                return obj;
+            }
+        };
+        processSnapshotData(snapshot);
+    });
+}
+
+function processSnapshotData(snapshot) {
         const sections = document.querySelectorAll('.product-list');
         if (sections.length === 0) return;
 
@@ -100,14 +140,14 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
         } else {
             sections[0].innerHTML = `<p style="text-align:center; color:#999; width:100%;">अभी कोई सामान लाइव नहीं है भाई!</p>`;
         }
-    });
 }
            
 
 // 4️⃣ Home Screen Layout Rendering
-function displayHomeProducts(storesList) {
+function displayHomeProducts(storesList, isAppend) {
     const sections = document.querySelectorAll('.product-list');
     if (sections.length === 0) return;
+    if (!isAppend) sections.forEach(sec => sec.innerHTML = "");
 
     let currentSectionIndex = 0;
     let itemsInCurrentSection = 0;
@@ -702,3 +742,23 @@ function getSmartScore(prod) {
     const travelCost = getTravelCost(prod.distance);
     return price + travelCost;
 }
+
+let _isFetchingBatch = false;
+
+window.addEventListener('scroll', function() {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const pageHeight = document.body.offsetHeight;
+    if (scrollPosition >= pageHeight - 400 && !_allBatchesLoaded && !_isFetchingBatch) {
+        _isFetchingBatch = true;
+        fetchProductsBatch(8, (newProducts) => {
+            newProducts.forEach(prod => {
+                const distance = calculateDistance(userLatitude, userLongitude, prod.lat, prod.lon);
+                prod.distance = distance;
+                prod.storeName = prod.shopName || "सस्ता स्टोर लोकल शॉप";
+                localProductsArray.push(prod);
+            });
+            displayHomeProducts(newProducts, true);
+            _isFetchingBatch = false;
+        });
+    }
+});

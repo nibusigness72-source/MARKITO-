@@ -50,7 +50,10 @@ store.effectivePrice = totalBill + travelCost;
 });
 
             // 🎯 Bina search ke sirf top 4 dukaan dikhao
-            const defaultStoresArray = storesArray.slice(0, 4);
+            // 🎯 Bina search ke sirf top 3 dukaan dikhao (lazy loading ke liye)
+            window._allSortedStores = storesArray;
+            window._listVisibleCount = window._listVisibleCount || 3;
+            const defaultStoresArray = storesArray.slice(0, window._listVisibleCount);
 
             // 2. अब सिर्फ इस सॉर्टेड लिस्ट को लूप करें (पुराना 'for in' लूप हटा दिया)
             defaultStoresArray.forEach((store) => {
@@ -73,17 +76,24 @@ card.setAttribute('data-category', allCategories);
 
                 card.setAttribute('data-distance-km', dist.toFixed(4));
                 
-                let itemsHtml = "";
-                productsArray.forEach((prod, index) => {
+             let itemsHtml = "";
+                let visibleIndex = 0;
+                let hiddenDivOpened = false;
+                productsArray.forEach((prod) => {
                     if (prod.stockStatus === "Out of Stock") return;
-               let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
-                    if (index < 1) itemsHtml += rowHtml;
-                    else {
-                        if (index === 1) itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
+                    let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
+                    if (visibleIndex < 1) {
+                        itemsHtml += rowHtml;
+                    } else {
+                        if (!hiddenDivOpened) {
+                            itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
+                            hiddenDivOpened = true;
+                        }
                         itemsHtml += rowHtml;
                     }
+                    visibleIndex++;
                 });
-                if (productsArray.length > 1) itemsHtml += `</div>`; 
+                if (hiddenDivOpened) itemsHtml += `</div>`;   
 
                 card.innerHTML = `
                        <div class="store-top">
@@ -378,4 +388,15 @@ function showSuggestions(val) {
 // Input h
 document.getElementById('mainSearch').addEventListener('input', function(e) {
     showSuggestions(e.target.value);
+});
+
+window.addEventListener('scroll', function() {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const pageHeight = document.body.offsetHeight;
+    if (scrollPosition >= pageHeight - 400) {
+        if (window._allSortedStores && window._listVisibleCount < window._allSortedStores.length) {
+            window._listVisibleCount += 3;
+            loadListSystem();
+        }
+    }
 });
