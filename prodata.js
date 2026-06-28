@@ -153,6 +153,9 @@ function savePhotoToDatabase(photoNum, base64) {
 // 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
 // पूरा पुराना submitProductToDatabase हटाकर यह लगाएं
 
+// ==========================================
+// 📸 NEW GALLERY FOLDER SYNC SYSTEM (100% FIXED)
+// ==========================================
 function submitProductToDatabase() {
     const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
@@ -162,7 +165,7 @@ function submitProductToDatabase() {
         return;
     }
 
-    // 🎯 आपका पुराना और फिक्स यूनिक आईडी सिस्टम
+    // 🎯 आपका ओरिजिनल और यूनिक आईडी सिस्टम
     const productId = `${user.uid}_box_${boxId}`;
 
     firebase.database()
@@ -171,11 +174,22 @@ function submitProductToDatabase() {
     .then(snapshot => {
         const storeInfo = snapshot.val() || {};
 
-        // 📸 गैलरी की 10 फ़ोटो को छानकर पुराने एरे (Array) फ़ॉर्मेट में लाना
-        let galleryPhotos = [];
+        // 📸 गैलरी की 10 फ़ोटो को नए 'gallery' फ़ोल्डर के लिए छानना
+        let cleanGalleryArray = [];
+        
         if (typeof uploadedPhotoURLs !== 'undefined' && uploadedPhotoURLs) {
-            // सारे नल (null) या खाली इंडेक्स को फिल्टर करके साफ एरे बनाओ
-            galleryPhotos = Object.values(uploadedPhotoURLs).filter(url => url && url.trim() !== "");
+            // ऑब्जेक्ट की सभी वैल्यूज (Base64 डेटा) को निकालो
+            Object.keys(uploadedPhotoURLs).forEach(key => {
+                const imgData = uploadedPhotoURLs[key];
+                if (imgData && imgData.trim() !== "") {
+                    cleanGalleryArray.push(imgData); // सिर्फ असली फ़ोटो को बिना गैप के एरे में डालो
+                }
+            });
+        }
+
+        // अगर मर्चेंट ने एक भी गैलरी फ़ोटो नहीं डाली, तो मुख्य फ़ोटो को ही डिफ़ॉल्ट डाल दो
+        if (cleanGalleryArray.length === 0) {
+            cleanGalleryArray.push(currentProductPhotoBase64 || "no_image.jpg");
         }
 
         const productData = {
@@ -191,12 +205,11 @@ function submitProductToDatabase() {
                 ? "Out of Stock"
                 : "In Stock",
 
-            // 🌟 मुख्य फ़ोटो (Main Image)
+            // 🌟 मुख्य फोटो (Main Image)
             photo: currentProductPhotoBase64 || "no_image.jpg",
             
-            // 📸 🔥 ये है असली गेम-चेंजर! पुराना गैलरी फ़ोल्डर 'photos' नाम से ही जाएगा,
-            // जिससे आपके प्रोफाइल पेज में ये तस्वीरें अपने आप बिना किसी कोड चेंज के दिखने लगेंगी!
-            photos: galleryPhotos.length > 0 ? galleryPhotos : ["no_image.jpg"],
+            // 📂 🔥 नया साफ़-सुथरा गैलरी फ़ोल्डर (बिना किसी फ़ायरबेस एरर के सेव होगा)
+            gallery: cleanGalleryArray,
 
             storeId: user.uid,
             shopName: storeInfo.shopName || "सस्ता स्टोर",
@@ -208,18 +221,18 @@ function submitProductToDatabase() {
 
         const updates = {};
 
-        // 🎯 1. पुराने वाले स्टोर के अंदर बॉक्स पाथ में डेटा भेजना
+        // 1️⃣ मर्चेंट के पर्सनल स्टोर के प्रोडक्ट्स में सेव करो
         updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
 
-        // 🚀 2. नए वाले ऑल प्रोडक्ट्स नोड में भी हुबहू सेम डेटा सिंक करना
+        // 2️⃣ कस्टमर ऐप के सुपरफास्ट नोड 'all_products' में भी सेव करो
         updates[`all_products/${productId}`] = productData;
 
         return firebase.database().ref().update(updates);
     })
     .then(() => {
-        alert("✅ बधाई हो नीलेश भाई! पुरानी गैलरी फ़ोल्डर (photos) में डेटा सुरक्षित सेव हो गया है। अब प्रोफाइल में अपने आप दिखेगा!");
+        alert("✅ सफलतापर्वक नए 'gallery' फ़ोल्डर के साथ सेव हो गया नीलेश भाई!");
         
-        // फॉर्म सबमिट होने के बाद पुरानी गैलरी एरे खाली करें
+        // फॉर्म सबमिट होने के बाद मर्चेंट पैनल की गैलरी मेमोरी साफ करो ताकि अगला प्रोडक्ट फ्रेश रहे
         if (typeof uploadedPhotoURLs !== 'undefined') {
             window.uploadedPhotoURLs = {}; 
         }
@@ -227,8 +240,8 @@ function submitProductToDatabase() {
         location.href = "account.html";
     })
     .catch(err => {
-        console.error("Error: ", err);
-        alert("❌ सेव करने में कोई समस्या आई भाई!");
+        console.error("Firebase Sync Error: ", err);
+        alert("❌ फ़ायरबेस में सेव नहीं हुआ! कंसोल चेक करें।");
     });
 }
 
