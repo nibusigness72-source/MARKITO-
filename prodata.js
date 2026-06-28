@@ -235,7 +235,6 @@ function loadSavedProductsFromDatabase() {
 }
 
 // 6️⃣ जब फॉर्म edit के लिए खुले तो पुरानी information load करना
-// 6️⃣ जब फॉर्म edit के लिए खुले तो पुरानी information load करना
 function loadProductFormDataFromDatabase() {
     const urlParams = new URLSearchParams(window.location.search);
     const boxId = urlParams.get('box');
@@ -293,15 +292,14 @@ function loadProductFormDataFromDatabase() {
                     }
                 }
                 
-                // 🔥 नीलेश भाई, यहाँ gallery हटाकर extra एरे से 10 फ़ोटो लोड करने का सटीक कोड लगा दिया है
-                let photoSource = data.extra || data.gallery;
-                if (photoSource && Array.isArray(photoSource)) {
+                // Gallery photos load करो
+                if (data.gallery) {
                     for (let i = 1; i <= 10; i++) {
-                        if (photoSource[i - 1]) {
+                        if (data.gallery['p' + i]) {
                             const galleryBox = document.getElementById('p-box-' + i);
                             if (galleryBox) {
                                 galleryBox.innerHTML = `
-                                    <img src="${photoSource[i - 1]}" 
+                                    <img src="${data.gallery['p' + i]}" 
                                          style="width:100%; height:100%; object-fit:cover; border-radius:5px;"
                                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27%3E%3Crect fill=%27%23e0e0e0%27 width=%2750%27 height=%2750%27/%3E%3C/svg%3E'">
                                 `;
