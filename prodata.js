@@ -152,53 +152,70 @@ function savePhotoToDatabase(photoNum, base64) {
 
 // 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
 // पूरा पुराना submitProductToDatabase हटाकर यह लगाएं
-// 📁 फोटो को सीधे extra फोल्डर में भेजने के लिए
-function savePhotoToDatabase(photoNum, base64) {
-    const user = firebase.auth().currentUser;
-    const boxId = new URLSearchParams(window.location.search).get('box') || currentSelectedBoxIndex;
-    if (!user || !boxId) return;
-    
-    // 🔥 यहाँ gallery हटाकर extra किया
-    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/extra/p' + photoNum).set(base64);
-}
-
-// 🎯 सबमिट करते समय डेटाबेस में extra नोड बनाने के लिए
+// 🎯 नीलेश भाई, ये रहा 10 फोटो को सीधे extra फोल्डर में भेजने वाला फिक्स फंक्शन
 function submitProductToDatabase() {
     const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
-    if (!user || !boxId) return;
+
+    if (!user || !boxId) {
+        alert("लॉगिन करें या बॉक्स चुनें!");
+        return;
+    }
 
     const productId = `${user.uid}_box_${boxId}`;
+
     firebase.database().ref('stores/' + user.uid).once('value').then(snapshot => {
         const storeInfo = snapshot.val() || {};
+
+        // 📸 सीधे HTML के 10 बॉक्सेस से लाइव बेस64 फोटो खींचेंगे (कोई मेमोरी एरर नहीं)
         let cleanExtraArray = [];
-        
-        if (typeof uploadedPhotoURLs !== 'undefined' && uploadedPhotoURLs) {
-            Object.keys(uploadedPhotoURLs).forEach(key => {
-                if (uploadedPhotoURLs[key]) cleanExtraArray.push(uploadedPhotoURLs[key]);
-            });
+        for (let i = 1; i <= 10; i++) {
+            const box = document.getElementById('p-box-' + i);
+            const img = box ? box.querySelector('img') : null;
+            if (img && img.src && img.src.startsWith('data:image')) {
+                cleanExtraArray.push(img.src); // सिर्फ वही फोटो जाएगी जो अपलोड हुई है
+            }
+        }
+
+        // अगर कोई भी एक्स्ट्रा फोटो नहीं है, तो मेन फोटो डाल दो
+        if (cleanExtraArray.length === 0) {
+            cleanExtraArray.push(currentProductPhotoBase64 || "no_image.jpg");
         }
 
         const productData = {
             productId,
             productName: document.getElementById('pName')?.value?.trim() || "बिना नाम का सामान",
+            category: document.getElementById('pCategory')?.value || "General",
             price: document.getElementById('pPrice')?.value || "0",
             unit: document.getElementById('pUnit')?.value || "",
+            brand: document.getElementById('pBrand')?.value || "",
+            description: document.getElementById('pDesc')?.value || "",
+            stockStatus: document.getElementsByName('stock')[1]?.checked ? "Out of Stock" : "In Stock",
             photo: currentProductPhotoBase64 || "no_image.jpg",
             
-            extra: cleanExtraArray, // 🔥 gallery की जगह अब extra जाएगा
+            // 🔥 अब 100% वही 10 फोटो एरे में जाएंगी जो आपने सेलेक्ट की हैं
+            extra: cleanExtraArray, 
 
             storeId: user.uid,
-            shopName: storeInfo.shopName || "सस्ता स्टोर"
+            shopName: storeInfo.shopName || "सस्ता स्टोर",
+            lat: storeInfo.location?.latitude || null,
+            lon: storeInfo.location?.longitude || null,
+            updatedAt: Date.now()
         };
 
         const updates = {};
         updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
         updates[`all_products/${productId}`] = productData;
+
         return firebase.database().ref().update(updates);
-    }).then(() => { 
-        alert("✅ Extra फ़ोल्डर में सेव हो गया!"); 
-        location.href = "account.html"; 
+    })
+    .then(() => {
+        alert("✅ अब आपकी चुनी हुई 10 फोटो 'extra' फ़ोल्डर में परफेक्ट सेव हो गईं!");
+        location.href = "account.html";
+    })
+    .catch(err => {
+        console.error("Sync Error: ", err);
+        alert("❌ सेव नहीं हुआ!");
     });
 }
 
