@@ -87,7 +87,7 @@ function fetchStoresFromFirebase() {
     _lastFetchedKey = null;
     _allBatchesLoaded = false;
 
-    fetchProductsBatch(8, (newProducts) => {
+    fetchProductsBatch(5, (newProducts) => {
         const snapshot = {
             exists: () => true,
             val: () => {
@@ -750,7 +750,7 @@ window.addEventListener('scroll', function() {
     const pageHeight = document.body.offsetHeight;
     if (scrollPosition >= pageHeight - 400 && !_allBatchesLoaded && !_isFetchingBatch) {
         _isFetchingBatch = true;
-        fetchProductsBatch(8, (newProducts) => {
+        fetchProductsBatch(5, (newProducts) => {
             newProducts.forEach(prod => {
                 const distance = calculateDistance(userLatitude, userLongitude, prod.lat, prod.lon);
                 prod.distance = distance;

@@ -155,45 +155,80 @@ function savePhotoToDatabase(photoNum, base64) {
 function submitProductToDatabase() {
     const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
-    if (!user || !boxId) { alert("लॉगिन करें या बॉक्स चुनें!"); return; }
 
-    const productId = `${user.uid}_box_${boxId}`; // Unique Product ID
+    if (!user || !boxId) {
+        alert("लॉगिन करें या बॉक्स चुनें!");
+        return;
+    }
 
-    // पहले मर्चेंट की प्रोफाइल से दुकान का नाम और लोकेशन निकालें
-    firebase.database().ref('stores/' + user.uid).once('value').then((snapshot) => {
+    // 🎯 आपका पुराना और फिक्स यूनिक आईडी सिस्टम
+    const productId = `${user.uid}_box_${boxId}`;
+
+    firebase.database()
+    .ref('stores/' + user.uid)
+    .once('value')
+    .then(snapshot => {
         const storeInfo = snapshot.val() || {};
-        const shopName = storeInfo.shopName || "सस्ता स्टोर लोकल शॉप";
-        const lat = storeInfo.location?.latitude || null;
-        const lon = storeInfo.location?.longitude || null;
+
+        // 📸 गैलरी की 10 फ़ोटो को पुराने तरीक़े के एरे में कलेक्ट करना
+        let galleryPhotos = [];
+        if (typeof uploadedPhotoURLs !== 'undefined' && uploadedPhotoURLs) {
+            // सारे नल (null) या खाली इंडेक्स हटाकर साफ़ एरे बनाओ
+            galleryPhotos = Object.values(uploadedPhotoURLs).filter(url => url && url.trim() !== "");
+        }
 
         const productData = {
-            productName: document.getElementById('pName')?.value.trim(),
-            category: document.getElementById('pCategory')?.value,
-            price: document.getElementById('pPrice')?.value.trim(),
-            unit: document.getElementById('pUnit')?.value.trim(),
-            brand: document.getElementById('pBrand')?.value.trim(),
-            description: document.getElementById('pDesc')?.value.trim(),
-            stockStatus: document.getElementsByName('stock')[1].checked ? "Out of Stock" : "In Stock",
+            productId,
+            productName: document.getElementById('pName')?.value?.trim() || "बिना नाम का सामान",
+            category: document.getElementById('pCategory')?.value || "General",
+            price: document.getElementById('pPrice')?.value || "0",
+            unit: document.getElementById('pUnit')?.value || "",
+            brand: document.getElementById('pBrand')?.value || "",
+            description: document.getElementById('pDesc')?.value || "",
+            stockStatus:
+                document.getElementsByName('stock')[1]?.checked
+                ? "Out of Stock"
+                : "In Stock",
+
+            // 🌟 मुख्य फ़ोटो (Main Image)
             photo: currentProductPhotoBase64 || "no_image.jpg",
-            lastUpdate: new Date().toLocaleDateString('en-IN'),
+            
+            // 📸 पुराना गैलरी फ़ोल्डर (Array) - बिल्कुल पहले की तरह!
+            photos: galleryPhotos.length > 0 ? galleryPhotos : ["no_image.jpg"],
+
             storeId: user.uid,
-            shopName: shopName,
-            lat: lat,
-            lon: lon
+            shopName: storeInfo.shopName || "सस्ता स्टोर",
+            lat: storeInfo.location?.latitude || null,
+            lon: storeInfo.location?.longitude || null,
+
+            updatedAt: Date.now()
         };
 
-        // MULTI-PATH UPDATE: दोनों जगह एक साथ डेटा सेव (सिंक) होगा
         const updates = {};
-        updates['stores/' + user.uid + '/products/box_' + boxId] = productData;
-        updates['all_products/' + productId] = productData;
+
+        // 🎯 आपके पुराने वाले फ़ोल्डर पाथ में डेटा भेजना
+        updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
+
+        // 🚀 नए वाले सुपरफ़ास्ट नोड में भी सेम डेटा सिंक करना
+        updates[`all_products/${productId}`] = productData;
 
         return firebase.database().ref().update(updates);
     })
     .then(() => {
-        alert("✅ प्रोडक्ट दोनों जगह सुरक्षित रूप से सेव हो गया!");
-        window.location.href = "account.html"; 
-    }).catch(err => console.error("Sync Error: ", err));
+        alert("✅ पहले वाले तरीक़े से गैलरी फ़ोल्डर में सब सुरक्षित सेव हो गया!");
+        
+        if (typeof uploadedPhotoURLs !== 'undefined') {
+            window.uploadedPhotoURLs = {}; 
+        }
+        
+        location.href = "account.html";
+    })
+    .catch(err => {
+        console.error("Error: ", err);
+        alert("❌ सेव करने में कोई समस्या आई!");
+    });
 }
+
 
 
 // 5️⃣ डेटाबेस से सभी प्रोडक्ट्स लोड करना (boxes में)
