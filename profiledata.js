@@ -218,7 +218,7 @@ document.addEventListener('click', function(e) {
     }
 }, true);
 // यह फंक्शन डेटा लोड करेगा और फोटो पर क्लिक सेट करेगा
-// 📸 प्रोफाइल पर extra फोल्डर से फोटो लोड करने के लिए
+// 📸 प्रोफाइल पर extra फोल्डर से फोटो, ब्रांड और डिस्क्रिप्शन लोड करने के लिए (FIXED)
 function loadExtraDetails(prodName) {
     if (!currentStoreId || !prodName) return;
 
@@ -227,6 +227,14 @@ function loadExtraDetails(prodName) {
             let data = child.val();
             if (data.productName && data.productName.toLowerCase() === prodName.toLowerCase()) {
                 
+                // 🏷️ नीलेश भाई, यहाँ ब्रांड और डिस्क्रिप्शन को स्क्रीन पर दिखा दिया
+                if (document.getElementById('sasta_disp_brand')) {
+                    document.getElementById('sasta_disp_brand').innerText = data.brand || "कोई ब्रांड नहीं";
+                }
+                if (document.getElementById('sasta_disp_desc')) {
+                    document.getElementById('sasta_disp_desc').innerText = data.description || "कोई विवरण नहीं";
+                }
+
                 // 🔥 gallery की जगह extra से डेटा उठाएगा
                 let photoSource = data.extra || data.gallery; 
 
