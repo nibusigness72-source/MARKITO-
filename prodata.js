@@ -152,48 +152,73 @@ function savePhotoToDatabase(photoNum, base64) {
 
 // 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
 // पूरा पुराना submitProductToDatabase हटाकर यह लगाएं
+// 🎯 नीलेश भाई, ये रहा 10 फोटो को सीधे extra फोल्डर में भेजने वाला फिक्स फंक्शन
 function submitProductToDatabase() {
     const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
-    if (!user || !boxId) { alert("लॉगिन करें या बॉक्स चुनें!"); return; }
 
-    const productId = `${user.uid}_box_${boxId}`; // Unique Product ID
+    if (!user || !boxId) {
+        alert("लॉगिन करें या बॉक्स चुनें!");
+        return;
+    }
 
-    // पहले मर्चेंट की प्रोफाइल से दुकान का नाम और लोकेशन निकालें
-    firebase.database().ref('stores/' + user.uid).once('value').then((snapshot) => {
+    const productId = `${user.uid}_box_${boxId}`;
+
+    firebase.database().ref('stores/' + user.uid).once('value').then(snapshot => {
         const storeInfo = snapshot.val() || {};
-        const shopName = storeInfo.shopName || "सस्ता स्टोर लोकल शॉप";
-        const lat = storeInfo.location?.latitude || null;
-        const lon = storeInfo.location?.longitude || null;
+
+        // 📸 सीधे HTML के 10 बॉक्सेस से लाइव बेस64 फोटो खींचेंगे (कोई मेमोरी एरर नहीं)
+        let cleanExtraArray = [];
+        for (let i = 1; i <= 10; i++) {
+            const box = document.getElementById('p-box-' + i);
+            const img = box ? box.querySelector('img') : null;
+            if (img && img.src && img.src.startsWith('data:image')) {
+                cleanExtraArray.push(img.src); // सिर्फ वही फोटो जाएगी जो अपलोड हुई है
+            }
+        }
+
+        // अगर कोई भी एक्स्ट्रा फोटो नहीं है, तो मेन फोटो डाल दो
+        if (cleanExtraArray.length === 0) {
+            cleanExtraArray.push(currentProductPhotoBase64 || "no_image.jpg");
+        }
 
         const productData = {
-            productName: document.getElementById('pName')?.value.trim(),
-            category: document.getElementById('pCategory')?.value,
-            price: document.getElementById('pPrice')?.value.trim(),
-            unit: document.getElementById('pUnit')?.value.trim(),
-            brand: document.getElementById('pBrand')?.value.trim(),
-            description: document.getElementById('pDesc')?.value.trim(),
-            stockStatus: document.getElementsByName('stock')[1].checked ? "Out of Stock" : "In Stock",
+            productId,
+            productName: document.getElementById('pName')?.value?.trim() || "बिना नाम का सामान",
+            category: document.getElementById('pCategory')?.value || "General",
+            price: document.getElementById('pPrice')?.value || "0",
+            unit: document.getElementById('pUnit')?.value || "",
+            brand: document.getElementById('pBrand')?.value || "",
+            description: document.getElementById('pDesc')?.value || "",
+            stockStatus: document.getElementsByName('stock')[1]?.checked ? "Out of Stock" : "In Stock",
             photo: currentProductPhotoBase64 || "no_image.jpg",
-            lastUpdate: new Date().toLocaleDateString('en-IN'),
+            
+            // 🔥 अब 100% वही 10 फोटो एरे में जाएंगी जो आपने सेलेक्ट की हैं
+            extra: cleanExtraArray, 
+
             storeId: user.uid,
-            shopName: shopName,
-            lat: lat,
-            lon: lon
+            shopName: storeInfo.shopName || "सस्ता स्टोर",
+            lat: storeInfo.location?.latitude || null,
+            lon: storeInfo.location?.longitude || null,
+            updatedAt: Date.now()
         };
 
-        // MULTI-PATH UPDATE: दोनों जगह एक साथ डेटा सेव (सिंक) होगा
         const updates = {};
-        updates['stores/' + user.uid + '/products/box_' + boxId] = productData;
-        updates['all_products/' + productId] = productData;
+        updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
+        updates[`all_products/${productId}`] = productData;
 
         return firebase.database().ref().update(updates);
     })
     .then(() => {
-        alert("✅ प्रोडक्ट दोनों जगह सुरक्षित रूप से सेव हो गया!");
-        window.location.href = "account.html"; 
-    }).catch(err => console.error("Sync Error: ", err));
+        alert("✅ अब आपकी चुनी हुई 10 फोटो 'extra' फ़ोल्डर में परफेक्ट सेव हो गईं!");
+        location.href = "account.html";
+    })
+    .catch(err => {
+        console.error("Sync Error: ", err);
+        alert("❌ सेव नहीं हुआ!");
+    });
 }
+
 
 
 // 5️⃣ डेटाबेस से सभी प्रोडक्ट्स लोड करना (boxes में)
