@@ -102,7 +102,7 @@
                 <i class="fas fa-arrow-left" onclick="window.history.back()"></i>
                 <div class="rating-badge">REVIEWS</div>
             </div>
-         <div class="user-avatar" id="profile-avatar-container"><i class="fas fa-user-circle" style="font-size: 3.5rem; color: #ccc;"></i></div>
+         <div class="user-avatar" id="profile-avatar-container"><div class="skeleton-avatar"></div></div>
 
 <h1 class="shop-name">STORE NAME</h1>
 
@@ -130,12 +130,11 @@
         </header>
 
         <div class="highlight-item">
-            <div class="h-img-box"><img src="rasgulla.jpg"></div>
+            <div class="h-img-box skeleton-img"></div>
             <div class="h-info-box">
-                <p class="h-name">rasgulla (1kg)</p>
-                <p class="h-price">₹800.00</p>
-                <p style="font-size:0.75rem; color:#777; margin-bottom:0.625rem;">pappu mistan | 1.5 km</p>
-                <a href="#" class="map-btn">Map on</a>
+                <div class="skeleton-text skeleton-title" style="width:60%;"></div>
+                <div class="skeleton-text skeleton-price" style="width:30%;"></div>
+                <div class="skeleton-text skeleton-store" style="width:50%;"></div>
             </div>
         </div>
         <button id="sasta_toggle_btn" onclick="toggleSastaDetails()" 
@@ -171,20 +170,25 @@
             <a href="tel:91XXX"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></a>
             <a href="https://wa.me/91XXX"><img src="https://cdn-icons-png.flaticon.com/512/733/733585.png"></a>
         </div>
-
-        <section class="product-list">
-            <div class="product-card"><img src="rasgulla.jpg"><div class="product-info"><h3>rasgulla</h3><span>₹800</span><div class="product-meta-box">
-    pappu mistan |<br>
-    <span class="km-text">1.5 km</span>
-</div>
-<a href="#" class="map-btn">Map on</a></div></div>
-            <div class="product-card"><img src="Chana.jpg"><div class="product-info"><h3>chana dal</h3><span>₹11</span><div class="product-meta">gupta store | <br>0.8 km</div>
-<a href="#" class="map-btn">Map on</a></div></div>
-            <div class="product-card"><img src="rasgulla.jpg"><div class="product-info"><h3>rasgulla</h3><span>₹80</span><div class="product-meta">pappu mistan |<br> 1.5 km</div>
-<a href="#" class="map-btn">Map on</a></div></div>
-            <div class="product-card"><img src="Chana.jpg"><div class="product-info"><h3>chana dal</h3><span>₹110</span><div class="product-meta">gupta store |<br> 0.8 km</div>
-<a href="#" class="map-btn">Map on</a></div></div>
-        </section>
+<section class="product-list">
+            <div class="product-card skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="product-info">
+                    <div class="skeleton-text skeleton-title"></div>
+                    <div class="skeleton-text skeleton-price"></div>
+                    <div class="skeleton-text skeleton-store"></div>
+                </div>
+            </div>
+            <div class="product-card skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="product-info">
+                    <div class="skeleton-text skeleton-title"></div>
+                    <div class="skeleton-text skeleton-price"></div>
+                    <div class="skeleton-text skeleton-store"></div>
+                </div>
+            </div>
+</section>
+        
     </div>
 
       <script>
