@@ -152,6 +152,7 @@ function savePhotoToDatabase(photoNum, base64) {
 
 // 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
 // पूरा पुराना submitProductToDatabase हटाकर यह लगाएं
+
 function submitProductToDatabase() {
     const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
@@ -170,10 +171,10 @@ function submitProductToDatabase() {
     .then(snapshot => {
         const storeInfo = snapshot.val() || {};
 
-        // 📸 गैलरी की 10 फ़ोटो को पुराने तरीक़े के एरे में कलेक्ट करना
+        // 📸 गैलरी की 10 फ़ोटो को छानकर पुराने एरे (Array) फ़ॉर्मेट में लाना
         let galleryPhotos = [];
         if (typeof uploadedPhotoURLs !== 'undefined' && uploadedPhotoURLs) {
-            // सारे नल (null) या खाली इंडेक्स हटाकर साफ़ एरे बनाओ
+            // सारे नल (null) या खाली इंडेक्स को फिल्टर करके साफ एरे बनाओ
             galleryPhotos = Object.values(uploadedPhotoURLs).filter(url => url && url.trim() !== "");
         }
 
@@ -193,7 +194,8 @@ function submitProductToDatabase() {
             // 🌟 मुख्य फ़ोटो (Main Image)
             photo: currentProductPhotoBase64 || "no_image.jpg",
             
-            // 📸 पुराना गैलरी फ़ोल्डर (Array) - बिल्कुल पहले की तरह!
+            // 📸 🔥 ये है असली गेम-चेंजर! पुराना गैलरी फ़ोल्डर 'photos' नाम से ही जाएगा,
+            // जिससे आपके प्रोफाइल पेज में ये तस्वीरें अपने आप बिना किसी कोड चेंज के दिखने लगेंगी!
             photos: galleryPhotos.length > 0 ? galleryPhotos : ["no_image.jpg"],
 
             storeId: user.uid,
@@ -206,17 +208,18 @@ function submitProductToDatabase() {
 
         const updates = {};
 
-        // 🎯 आपके पुराने वाले फ़ोल्डर पाथ में डेटा भेजना
+        // 🎯 1. पुराने वाले स्टोर के अंदर बॉक्स पाथ में डेटा भेजना
         updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
 
-        // 🚀 नए वाले सुपरफ़ास्ट नोड में भी सेम डेटा सिंक करना
+        // 🚀 2. नए वाले ऑल प्रोडक्ट्स नोड में भी हुबहू सेम डेटा सिंक करना
         updates[`all_products/${productId}`] = productData;
 
         return firebase.database().ref().update(updates);
     })
     .then(() => {
-        alert("✅ पहले वाले तरीक़े से गैलरी फ़ोल्डर में सब सुरक्षित सेव हो गया!");
+        alert("✅ बधाई हो नीलेश भाई! पुरानी गैलरी फ़ोल्डर (photos) में डेटा सुरक्षित सेव हो गया है। अब प्रोफाइल में अपने आप दिखेगा!");
         
+        // फॉर्म सबमिट होने के बाद पुरानी गैलरी एरे खाली करें
         if (typeof uploadedPhotoURLs !== 'undefined') {
             window.uploadedPhotoURLs = {}; 
         }
@@ -225,10 +228,9 @@ function submitProductToDatabase() {
     })
     .catch(err => {
         console.error("Error: ", err);
-        alert("❌ सेव करने में कोई समस्या आई!");
+        alert("❌ सेव करने में कोई समस्या आई भाई!");
     });
 }
-
 
 
 // 5️⃣ डेटाबेस से सभी प्रोडक्ट्स लोड करना (boxes में)
