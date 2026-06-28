@@ -152,98 +152,56 @@ function savePhotoToDatabase(photoNum, base64) {
 
 // 4️⃣ पूरा प्रोडक्ट डेटाबेस में सेव करना
 // पूरा पुराना submitProductToDatabase हटाकर यह लगाएं
+// 📁 फोटो को सीधे extra फोल्डर में भेजने के लिए
+function savePhotoToDatabase(photoNum, base64) {
+    const user = firebase.auth().currentUser;
+    const boxId = new URLSearchParams(window.location.search).get('box') || currentSelectedBoxIndex;
+    if (!user || !boxId) return;
+    
+    // 🔥 यहाँ gallery हटाकर extra किया
+    firebase.database().ref('stores/' + user.uid + '/products/box_' + boxId + '/extra/p' + photoNum).set(base64);
+}
 
-// ==========================================
-// 📸 NEW GALLERY FOLDER SYNC SYSTEM (100% FIXED)
-// ==========================================
+// 🎯 सबमिट करते समय डेटाबेस में extra नोड बनाने के लिए
 function submitProductToDatabase() {
     const boxId = new URLSearchParams(window.location.search).get('box');
     const user = firebase.auth().currentUser;
+    if (!user || !boxId) return;
 
-    if (!user || !boxId) {
-        alert("लॉगिन करें या बॉक्स चुनें!");
-        return;
-    }
-
-    // 🎯 आपका ओरिजिनल और यूनिक आईडी सिस्टम
     const productId = `${user.uid}_box_${boxId}`;
-
-    firebase.database()
-    .ref('stores/' + user.uid)
-    .once('value')
-    .then(snapshot => {
+    firebase.database().ref('stores/' + user.uid).once('value').then(snapshot => {
         const storeInfo = snapshot.val() || {};
-
-        // 📸 गैलरी की 10 फ़ोटो को नए 'gallery' फ़ोल्डर के लिए छानना
-        let cleanGalleryArray = [];
+        let cleanExtraArray = [];
         
         if (typeof uploadedPhotoURLs !== 'undefined' && uploadedPhotoURLs) {
-            // ऑब्जेक्ट की सभी वैल्यूज (Base64 डेटा) को निकालो
             Object.keys(uploadedPhotoURLs).forEach(key => {
-                const imgData = uploadedPhotoURLs[key];
-                if (imgData && imgData.trim() !== "") {
-                    cleanGalleryArray.push(imgData); // सिर्फ असली फ़ोटो को बिना गैप के एरे में डालो
-                }
+                if (uploadedPhotoURLs[key]) cleanExtraArray.push(uploadedPhotoURLs[key]);
             });
-        }
-
-        // अगर मर्चेंट ने एक भी गैलरी फ़ोटो नहीं डाली, तो मुख्य फ़ोटो को ही डिफ़ॉल्ट डाल दो
-        if (cleanGalleryArray.length === 0) {
-            cleanGalleryArray.push(currentProductPhotoBase64 || "no_image.jpg");
         }
 
         const productData = {
             productId,
             productName: document.getElementById('pName')?.value?.trim() || "बिना नाम का सामान",
-            category: document.getElementById('pCategory')?.value || "General",
             price: document.getElementById('pPrice')?.value || "0",
             unit: document.getElementById('pUnit')?.value || "",
-            brand: document.getElementById('pBrand')?.value || "",
-            description: document.getElementById('pDesc')?.value || "",
-            stockStatus:
-                document.getElementsByName('stock')[1]?.checked
-                ? "Out of Stock"
-                : "In Stock",
-
-            // 🌟 मुख्य फोटो (Main Image)
             photo: currentProductPhotoBase64 || "no_image.jpg",
             
-            // 📂 🔥 नया साफ़-सुथरा गैलरी फ़ोल्डर (बिना किसी फ़ायरबेस एरर के सेव होगा)
-            gallery: cleanGalleryArray,
+            extra: cleanExtraArray, // 🔥 gallery की जगह अब extra जाएगा
 
             storeId: user.uid,
-            shopName: storeInfo.shopName || "सस्ता स्टोर",
-            lat: storeInfo.location?.latitude || null,
-            lon: storeInfo.location?.longitude || null,
-
-            updatedAt: Date.now()
+            shopName: storeInfo.shopName || "सस्ता स्टोर"
         };
 
         const updates = {};
-
-        // 1️⃣ मर्चेंट के पर्सनल स्टोर के प्रोडक्ट्स में सेव करो
         updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
-
-        // 2️⃣ कस्टमर ऐप के सुपरफास्ट नोड 'all_products' में भी सेव करो
         updates[`all_products/${productId}`] = productData;
-
         return firebase.database().ref().update(updates);
-    })
-    .then(() => {
-        alert("✅ सफलतापर्वक नए 'gallery' फ़ोल्डर के साथ सेव हो गया नीलेश भाई!");
-        
-        // फॉर्म सबमिट होने के बाद मर्चेंट पैनल की गैलरी मेमोरी साफ करो ताकि अगला प्रोडक्ट फ्रेश रहे
-        if (typeof uploadedPhotoURLs !== 'undefined') {
-            window.uploadedPhotoURLs = {}; 
-        }
-        
-        location.href = "account.html";
-    })
-    .catch(err => {
-        console.error("Firebase Sync Error: ", err);
-        alert("❌ फ़ायरबेस में सेव नहीं हुआ! कंसोल चेक करें।");
+    }).then(() => { 
+        alert("✅ Extra फ़ोल्डर में सेव हो गया!"); 
+        location.href = "account.html"; 
     });
 }
+
 
 
 // 5️⃣ डेटाबेस से सभी प्रोडक्ट्स लोड करना (boxes में)

@@ -218,41 +218,25 @@ document.addEventListener('click', function(e) {
     }
 }, true);
 // यह फंक्शन डेटा लोड करेगा और फोटो पर क्लिक सेट करेगा
-// ====================================================================
-// 📸 NEW GALLERY ARRAY UPDATER FOR PROFILE (100% FIXED)
-// ====================================================================
+// 📸 प्रोफाइल पर extra फोल्डर से फोटो लोड करने के लिए
 function loadExtraDetails(prodName) {
     if (!currentStoreId || !prodName) return;
 
     firebase.database().ref('stores/' + currentStoreId + '/products').once('value').then((snapshot) => {
         snapshot.forEach((child) => {
             let data = child.val();
-            // प्रोडक्ट नाम मैच करना
             if (data.productName && data.productName.toLowerCase() === prodName.toLowerCase()) {
                 
-                // ब्रांड और डिस्क्रिप्शन सेट करना
-                if(document.getElementById('sasta_disp_brand')) document.getElementById('sasta_disp_brand').innerText = data.brand || "कोई ब्रांड नहीं";
-                if(document.getElementById('sasta_disp_desc')) document.getElementById('sasta_disp_desc').innerText = data.description || "कोई विवरण नहीं";
+                // 🔥 gallery की जगह extra से डेटा उठाएगा
+                let photoSource = data.extra || data.gallery; 
 
-                // 📸 गैलरी फोटो लोड करना (नए साफ़-सुथरे एरे फ़ॉर्मेट से)
-                if (data.gallery && Array.isArray(data.gallery)) { 
-                    // पहले से मौजूद 10 फोटो बॉक्सेस को लूप में चेक करो
+                if (photoSource && Array.isArray(photoSource)) { 
                     for (let i = 1; i <= 10; i++) {
                         let pBox = document.getElementById('photo-' + i);
-                        if (pBox) {
-                            // एरे 0 से शुरू होता है, इसलिए 'i - 1' का इस्तेमाल करेंगे
-                            let photoUrl = data.gallery[i - 1]; 
-                            
-                            if (photoUrl && photoUrl.trim() !== "") {
-                                pBox.innerHTML = `<img src="${photoUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;">`;
-                                pBox.style.display = "block"; // अगर छुपा हो तो दिखाओ
-                                
-                                // क्लिक करने पर फुल स्क्रीन स्लाइडर खुलेगा
-                                pBox.onclick = () => openFullGallery(photoUrl);
-                            } else {
-                                // अगर उस नंबर पर फोटो नहीं है, तो बॉक्स को खाली रखो या छुपा दो
-                                pBox.innerHTML = "";
-                            }
+                        if (pBox && photoSource[i - 1]) {
+                            pBox.innerHTML = `<img src="${photoSource[i - 1]}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;">`;
+                            pBox.style.display = "block";
+                            pBox.onclick = () => openFullGallery(photoSource[i - 1]);
                         }
                     }
                 }
