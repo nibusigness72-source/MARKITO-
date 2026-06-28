@@ -76,19 +76,13 @@ card.setAttribute('data-category', allCategories);
 
                 card.setAttribute('data-distance-km', dist.toFixed(4));
                 
-             const firstVisibleProduct = productsArray.find(p => p.stockStatus !== "Out of Stock");
-let itemsHtml = "";
+             const visibleProducts = productsArray.filter(p => p.stockStatus !== "Out of Stock");
+                const firstVisibleProduct = visibleProducts[0];
 
-if (firstVisibleProduct) {
-    itemsHtml = `
-        <div class="item-row"
-             data-desc="${firstVisibleProduct.description || ''}"
-             data-price="${firstVisibleProduct.price || 0}">
-            <span>${firstVisibleProduct.productName}</span>
-            <span>₹${firstVisibleProduct.price}</span>
-        </div>
-    `;
-}
+                let itemsHtml = "";
+                if (firstVisibleProduct) {
+                    itemsHtml = `<div class="item-row" data-desc="${firstVisibleProduct.description || ''}" data-price="${firstVisibleProduct.price || 0}"><span>${firstVisibleProduct.productName}</span> <span>₹${firstVisibleProduct.price}</span></div>`;
+                }
 
                 card.innerHTML = `
                        <div class="store-top">
