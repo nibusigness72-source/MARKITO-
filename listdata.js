@@ -76,24 +76,19 @@ card.setAttribute('data-category', allCategories);
 
                 card.setAttribute('data-distance-km', dist.toFixed(4));
                 
-             let itemsHtml = "";
-                let visibleIndex = 0;
-                let hiddenDivOpened = false;
-                productsArray.forEach((prod) => {
-                    if (prod.stockStatus === "Out of Stock") return;
-                    let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
-                    if (visibleIndex < 1) {
-                        itemsHtml += rowHtml;
-                    } else {
-                        if (!hiddenDivOpened) {
-                            itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
-                            hiddenDivOpened = true;
-                        }
-                        itemsHtml += rowHtml;
-                    }
-                    visibleIndex++;
-                });
-                if (hiddenDivOpened) itemsHtml += `</div>`;   
+             const firstVisibleProduct = productsArray.find(p => p.stockStatus !== "Out of Stock");
+let itemsHtml = "";
+
+if (firstVisibleProduct) {
+    itemsHtml = `
+        <div class="item-row"
+             data-desc="${firstVisibleProduct.description || ''}"
+             data-price="${firstVisibleProduct.price || 0}">
+            <span>${firstVisibleProduct.productName}</span>
+            <span>₹${firstVisibleProduct.price}</span>
+        </div>
+    `;
+}
 
                 card.innerHTML = `
                        <div class="store-top">
