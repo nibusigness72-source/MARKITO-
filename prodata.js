@@ -381,14 +381,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase !== 'undefined') {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                console.log("✅ यूज़र logged in, डेटा लोड हो रहा है...");
-                loadSavedProductsFromDatabase();
-                
-                // अगर URL में box है तो form data भी load करो
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('box') !== null) {
-                    loadProductFormDataFromDatabase();
-                }
+                // 🎯 Pehle check karo - kya Create Account form bhara hua hai?
+                firebase.database().ref('stores/' + user.uid).once('value').then((snapshot) => {
+                    const storeData = snapshot.val();
+                    const isAccountComplete = storeData && storeData.shopName && storeData.ownerName && storeData.location;
+
+                    if (!isAccountComplete) {
+                        alert("पहले अपनी दुकान की जानकारी भरें (Create Account)!");
+                        window.location.href = "create-account.html";
+                        return;
+                    }
+
+                    console.log("✅ यूज़र logged in, डेटा लोड हो रहा है...");
+                    loadSavedProductsFromDatabase();
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('box') !== null) {
+                        loadProductFormDataFromDatabase();
+                    }
+                });
+            } else {
+                window.location.href = "singing.html";
             }
         });
     }
