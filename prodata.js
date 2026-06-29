@@ -204,7 +204,6 @@ function submitProductToDatabase() {
             updatedAt: Date.now()
         };
 
-        alert("productNameLower value: '" + productData.productNameLower + "'");
         const updates = {};
         updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
         updates[`all_products/${productId}`] = productData;
