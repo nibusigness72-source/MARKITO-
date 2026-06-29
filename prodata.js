@@ -194,15 +194,17 @@ function submitProductToDatabase() {
             photo: currentProductPhotoBase64 || "no_image.jpg",
             
             // 🔥 अब 100% वही 10 फोटो एरे में जाएंगी जो आपने सेलेक्ट की हैं
-            extra: cleanExtraArray, 
+           extra: cleanExtraArray, 
 
+            productNameLower: (document.getElementById('pName')?.value?.trim() || "").toLowerCase(),
             storeId: user.uid,
-            shopName: storeInfo.shopName || "सस्ता स्टोर",
+            shopName: storeInfo.shopName || "सस्ता स्टोर", 
             lat: storeInfo.location?.latitude || null,
             lon: storeInfo.location?.longitude || null,
             updatedAt: Date.now()
         };
 
+        alert("productNameLower value: '" + productData.productNameLower + "'");
         const updates = {};
         updates[`stores/${user.uid}/products/box_${boxId}`] = productData;
         updates[`all_products/${productId}`] = productData;

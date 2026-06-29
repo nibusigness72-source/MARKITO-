@@ -129,6 +129,38 @@ card.setAttribute('data-category', allCategories);
 function startSearch() {
     const tags = Array.from(document.querySelectorAll('#tag-container span')).map(t => t.innerText.replace('×', '').trim().toLowerCase());
     const mainInput = document.getElementById('mainSearch').value.toLowerCase().trim();
+
+    // 🔥 Firebase se direct search bhi karo - poora data nahi, sirf matching products check
+    if (mainInput.length >= 2) {
+        const existsLocally = Array.from(document.querySelectorAll('.item-row span:first-child'))
+            .some(span => span.textContent.toLowerCase().startsWith(mainInput));
+
+        if (!existsLocally) {
+            firebase.database().ref('all_products')
+                .orderByChild('productNameLower')
+                .startAt(mainInput)
+                .endAt(mainInput + '\uf8ff')
+                .limitToFirst(20)
+                .once('value', (snapshot) => {
+                    snapshot.forEach(child => {
+                        const prod = child.val();
+                        const sId = prod.storeId;
+                        if (!sId) return;
+                        const alreadyHaveStore = (window._allSortedStores || []).some(s => s.id === sId);
+                        if (!alreadyHaveStore) {
+                            firebase.database().ref('stores/' + sId).once('value', (storeSnap) => {
+                                const storeData = storeSnap.val();
+                                if (storeData && isStoreOpenNow(storeData)) {
+                                    storeData.id = sId;
+                                    window._allSortedStores = window._allSortedStores || [];
+                                    window._allSortedStores.push(storeData);
+                                }
+                            });
+                        }
+                    });
+                });
+        }
+    }
     const searchTerms = [...new Set([...tags, ...(mainInput ? [mainInput] : [])])];
     const totalSearched = searchTerms.length;
 

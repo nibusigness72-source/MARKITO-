@@ -220,6 +220,28 @@ const parts = searchText.trim().split(/\s+/);
 const mainWord = parts[0]; // pehla word = product naam
 const filterWords = parts.slice(1).join(' '); // baaki = filter
 
+// 🔥 Firebase se direct search bhi karo (background mein) - poora data nahi, sirf matching
+if (mainWord.length >= 2) {
+    firebase.database().ref('all_products')
+        .orderByChild('productNameLower')
+        .startAt(mainWord)
+        .endAt(mainWord + '\uf8ff')
+        .limitToFirst(20)
+        .once('value', (snapshot) => {
+          alert("Firebase search result mila: " + snapshot.numChildren() + " products for '" + mainWord + "'");
+            snapshot.forEach(child => {
+                const prod = child.val();
+                prod.productId = child.key;
+                const exists = localProductsArray.some(p => p.productId === prod.productId);
+                if (!exists) {
+                    prod.distance = calculateDistance(userLatitude, userLongitude, prod.lat, prod.lon);
+                    prod.storeName = prod.shopName || "सस्ता स्टोर लोकल शॉप";
+                    localProductsArray.push(prod);
+                }
+            });
+        });
+}
+
 // Step 2: Matching products dhundho
 const matchingProds = localProductsArray.filter(prod => {
     const pName = (prod.productName || "").toLowerCase();
