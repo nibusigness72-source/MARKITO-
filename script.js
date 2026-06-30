@@ -468,3 +468,16 @@ if (typeof triggerProductPhotoUpload === 'undefined') {
         document.getElementById('fileInput').click();
     }
 }
+// सेटिंग मेनू को खोलने और बंद करने का लॉजिक
+function toggleSettingMenu() {
+    const dropdown = document.getElementById('setting-dropdown-menu');
+    const chevron = document.getElementById('setting-chevron');
+    
+    if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+        dropdown.style.display = 'block';
+        chevron.className = 'fas fa-chevron-up'; // तीर ऊपर घूमेगा
+    } else {
+        dropdown.style.display = 'none';
+        chevron.className = 'fas fa-chevron-down'; // तीर वापस नीचे
+    }
+}

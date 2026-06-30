@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isAccountComplete = storeData && storeData.shopName && storeData.ownerName && storeData.location;
 
                     if (!isAccountComplete) {
-                        alert("पहले अपनी दुकान की जानकारी भरें (Create Account)!");
+                      alert("Please complete your store profile before continuing.");  
                         window.location.href = "create-account.html";
                         return;
                     }

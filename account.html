@@ -91,6 +91,28 @@
                 <i class="fas fa-sign-out-alt"></i> LOGOUT
             </button>
         </main>
+
+      <!-- सेटिंग बटन (इसके अंदर दो सब-बटन खुलेंगे) -->
+<div class="setting-container">
+    <button class="menu-item" id="setting-toggle-btn" onclick="toggleSettingMenu()">
+        <span><i class="fas fa-cog"></i> Settings</span>
+        <i class="fas fa-chevron-down" id="setting-chevron"></i>
+    </button>
+    
+    <!-- क्लिक करने पर खुलने वाले दो बटन -->
+    <div class="setting-dropdown" id="setting-dropdown-menu" style="display: none; padding-left: 1rem;  background: #f9f9f9;">
+        <button class="menu-item" onclick="location.href='privacy.html'" style="border-bottom: 1px solid #eee;">
+            <span><i class="fas fa-shield-alt"></i> Privacy Policy</span>
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <button class="menu-item" onclick="location.href='contact.html'">
+            <span><i class="fas fa-envelope"></i> Contact Us</span>
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+      
 <!-- Bottom Navigation Bar - Icons Removed -->
 <nav class="footer-nav">
     <button class="nav-btn home-btn" onclick="location.href='index.html'">HOME</button>

@@ -687,58 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 })();
 
-// 🌟 बैकग्राउंड चेकर: सर्च या कैटेगरी लोडिंग के दौरान भी कोई आउट ऑफ स्टॉक सामान दिखे तो तुरंत रिमूव करो
-setInterval(() => {
-    document.querySelectorAll('.product-card').forEach(card => {
-        const productNameElement = card.querySelector('.product-name');
-        if (productNameElement) {
-            const currentName = productNameElement.textContent.split(' (')[0].trim();
-            const isOut = localProductsArray.some(p => p.productName === currentName && p.stockStatus === "Out of Stock");
-            if (isOut) {
-                card.remove(); // जड़ से खत्म!
-            }
-        }
-    });
-}, 200);
 
-
-
-
-// ==========================================
-// 🚀 नीलेश भाई का सुपर रो-फिक्सर: सारे जिंदा प्रोडक्ट्स को एक लाइन में सटाने के लिए
-// ==========================================
-function fixEmptySpaces() {
-    const sections = document.querySelectorAll('.product-list');
-    if (sections.length < 2) return; // अगर एक ही सेक्शन है तो जरूरत नहीं
-
-    const firstSection = sections[0]; // पहला मुख्य सेक्शन
-
-    // बाकी के जितने भी सेक्शन्स हैं, उनके अंदर के जिंदा प्रोडक्ट्स को पहले वाले में डालो
-    sections.forEach((sec, index) => {
-        if (index > 0) {
-            const cards = sec.querySelectorAll('.product-card');
-            cards.forEach(card => {
-                firstSection.appendChild(card); // उठाकर पहले सेक्शन में डाल दिया
-            });
-        }
-    });
-
-    // 🎯 अब पहले सेक्शन को पूरी तरह से लाइन में सटने के लिए कमांड दो
-    firstSection.style.display = 'flex';
-    firstSection.style.flexWrap = 'wrap';
-    firstSection.style.justifyContent = 'flex-start';
-    firstSection.style.gap = '10px'; // डिब्बों के बीच का गैप
-    
-    // हर कार्ड की चौड़ाई मोबाइल स्क्रीन के हिसाब से सेट करो ताकि एक लाइन में 2 सामान आएं
-    const allCards = firstSection.querySelectorAll('.product-card');
-    allCards.forEach(card => {
-        card.style.flex = '0 1 calc(50% - 5px)';
-        card.style.boxSizing = 'border-box';
-    });
-}
-
-// 🌟 हर 300 मिलीसेकंड में यह जिंदा डिब्बों को खाली जगह पर खींचकर सेट करता रहेगा
-setInterval(fixEmptySpaces, 300);
 
 function getTravelCost(distance) {
     if (distance <= 0.5) return 5;
