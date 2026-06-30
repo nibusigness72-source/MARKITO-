@@ -28,7 +28,7 @@ function setShopLocation(buttonElement) {
     if (navigator.geolocation) {
         // बटन पर लोडिंग टेक्स्ट दिखाना
         if (buttonElement && typeof buttonElement === 'object') {
-            buttonElement.innerHTML = 'लोकेशन ले रहा है...';
+            buttonElement.innerHTML = 'Getting location...';
         }
         
         navigator.geolocation.getCurrentPosition((position) => {
@@ -56,7 +56,7 @@ function setShopLocation(buttonElement) {
                 buttonElement.style.backgroundColor = '#2e7d32';
                 buttonElement.style.color = '#ffffff';
             } else {
-                alert("दुकान की लोकेशन सही से सेट हो गई है! ✅");
+                alert("Shop location saved successfully.");
             }
         }, (error) => {
             console.error("GPS एरर आया:", error);
@@ -80,7 +80,7 @@ function saveShopRegistration() {
     const user = firebase.auth().currentUser;
     
     if (!user) {
-        alert("पहले गूगल से लॉगिन करें, तभी अकाउंट का डेटा सेव होगा!");
+        alert("Please sign in with Google to save your account details.");
         console.log("लॉगिन एरर: कोई यूजर लॉग इन नहीं है।");
         return;
     }
@@ -107,11 +107,11 @@ function saveShopRegistration() {
 
     // अनिवार्य फ़ील्ड्स चेक करना
     if (!shopName || !ownerName || !shopAddress) {
-        alert("कृपया दुकान का नाम, आपका नाम और दुकान का पता ज़रूर भरें!");
+        alert("Please enter shop name, owner name and shop address.");
         return;
     }
 
-    console.log("फायरबेस में डेटा भेजने का प्रयास शुरू...");
+    console.log("Saving data to Firebase...");
 
     // 3. फायरबेस रियलटाइम डेटाबेस में डेटा सेव करना
     firebase.database().ref('stores/' + user.uid).set({
@@ -133,12 +133,12 @@ function saveShopRegistration() {
         photos: uploadedPhotoURLs.length > 0 ? uploadedPhotoURLs : ["rasgulla.jpg", "Chana.jpg"]
     })
     .then(() => {
-        alert("आपकी दुकान का अकाउंट हमेशा के लिए सेव हो गया है! 🎉");
+        alert("Shop account created successfully.");
         window.location.href = "account.html"; 
     })
     .catch((error) => {
         console.error("फायरबेस राइट एरर:", error);
-        alert("फायरबेस में डेटा नहीं जा पाया: " + error.message);
+        alert("Unable to save data. Please try again.");
     });
 }
 
@@ -242,7 +242,7 @@ function homePageGPSActivate(btnElement) {
 
         }, (error) => {
             console.error("GPS एरर आया:", error);
-            alert("ऐप सही से चलाने के लिए मोबाइल का GPS (Location) ऑन करना ज़रूरी है भाई!");
+            alert("Please turn on GPS and try again.");
             
             // अगर एरर आए तो बटन को वापस पहले जैसा कर दें
             if (btnElement) {
@@ -254,7 +254,7 @@ function homePageGPSActivate(btnElement) {
             timeout: 10000
         });
     } else {
-        alert("आपका मोबाइल GPS सपोर्ट नहीं करता।");
+        alert("Location services are not supported on this device.");
     }
 }
 
@@ -291,7 +291,7 @@ function handlePhotoSelection(event) {
     const files = event.target.files;
     
     if (files.length > 4) {
-        alert("नीलेश भाई, आप ज़्यादा से ज़्यादा सिर्फ ४ फ़ोटो ही चुन सकते हैं!");
+        alert("You can upload up to 4 photos only.");
         event.target.value = ""; 
         uploadedPhotoURLs = [];
         return;
@@ -383,7 +383,7 @@ function handlePhotoSelection(event) {
         
         // चेक करो कि कुल 4 फोटो से ज़्यादा न होने पाएँ
         if (uploadedPhotoURLs.length >= 4) {
-            alert("नीलेश भाई, आप ज़्यादा से ज़्यादा सिर्फ 4 फ़ोटो ही डाल सकते हैं!");
+            alert("You can upload up to 4 photos only.");
             break;
         }
 

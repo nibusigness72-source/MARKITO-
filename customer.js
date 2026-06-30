@@ -206,9 +206,8 @@ function setupAdvancedSearchSystem() {
         const searchText = e.target.value.toLowerCase().trim();
         suggestBox.innerHTML = "";
 
-        if (searchText === "") {
+        if (searchText.trim() === "") {
             suggestBox.style.display = "none";
-            fetchStoresFromFirebase(); 
             return;
         }
 

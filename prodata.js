@@ -46,7 +46,7 @@ function triggerProductPhotoUpload(photoNum = 'main') {
                 const img = new Image();
                 img.onerror = function() {
                     console.error("Image load error");
-                    alert("फोटो लोड नहीं हो सकी। दोबारा कोशिश करें।");
+        alert("Photo could not be loaded. Please try again.");            
                 };
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
@@ -127,7 +127,7 @@ function triggerProductPhotoUpload(photoNum = 'main') {
 function savePhotoToDatabase(photoNum, base64) {
     const user = firebase.auth().currentUser;
     if (!user) {
-        alert("पहले login करें!");
+        alert("Please sign in to continue.");
         return;
     }
     
@@ -211,7 +211,7 @@ function submitProductToDatabase() {
         return firebase.database().ref().update(updates);
     })
     .then(() => {
-        alert("✅ अब आपकी चुनी हुई 10 फोटो 'extra' फ़ोल्डर में परफेक्ट सेव हो गईं!");
+        alert("Your photos have been saved successfully.");
         location.href = "account.html";
     })
     .catch(err => {
@@ -260,7 +260,7 @@ function loadSavedProductsFromDatabase() {
         });
 }
 
-// 6️⃣ जब फॉर्म edit के लिए खुले तो पुरानी information load करना
+
 // 6️⃣ जब फॉर्म edit के लिए खुले तो पुरानी information load करना
 function loadProductFormDataFromDatabase() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -357,7 +357,7 @@ function deleteProductFromDatabase() {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
-    if (confirm("क्या आप इस प्रोडक्ट को डिलीट करना चाहते हैं?")) {
+    if (confirm("Are you sure you want to delete this product?")) {
         const productId = `${user.uid}_box_${currentSelectedBoxIndex}`;
 
         const updates = {};
@@ -366,7 +366,7 @@ function deleteProductFromDatabase() {
 
         firebase.database().ref().update(updates)
             .then(() => {
-                alert("✅ प्रोडक्ट हर जगह से डिलीट हो गया! 🗑️");
+                alert("Product deleted successfully.");
                 window.location.href = "account.html"; 
             })
             .catch((error) => {

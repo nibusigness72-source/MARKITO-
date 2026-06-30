@@ -229,10 +229,10 @@ function loadExtraDetails(prodName) {
                 
                 // 🏷️ नीलेश भाई, यहाँ ब्रांड और डिस्क्रिप्शन को स्क्रीन पर दिखा दिया
                 if (document.getElementById('sasta_disp_brand')) {
-                    document.getElementById('sasta_disp_brand').innerText = data.brand || "कोई ब्रांड नहीं";
+                    document.getElementById('sasta_disp_brand').innerText = data.brand || "No data";
                 }
                 if (document.getElementById('sasta_disp_desc')) {
-                    document.getElementById('sasta_disp_desc').innerText = data.description || "कोई विवरण नहीं";
+                    document.getElementById('sasta_disp_desc').innerText = data.description || "No data";
                 }
 
                 // 🔥 gallery की जगह extra से डेटा उठाएगा
