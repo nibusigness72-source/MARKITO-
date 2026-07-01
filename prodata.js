@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } else {
-                window.location.href = "singing.html";
+                //window.location.href = "singing.html";
             }
         });
     }
