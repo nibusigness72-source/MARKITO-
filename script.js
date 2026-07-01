@@ -400,7 +400,7 @@ const exitBtn = document.querySelector('.exit-btn');
 if (exitBtn) {
     exitBtn.addEventListener('click', () => {
         firebase.auth().signOut().then(() => {
-           // window.location.href = "singing.html";
+            window.location.href = "singing.html";
         }).catch((error) => {
             console.error("लॉग आउट करने में गड़बड़:", error);
         });
