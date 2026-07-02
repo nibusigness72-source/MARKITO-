@@ -3,111 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MARKITO - Login</title>
-    
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .login-container {
-            text-align: center;
-            background: white;
-            padding: 2.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0px 0.25rem 0.625rem rgba(0,0,0,0.1);
-            max-width: 22rem;
-            width: 100%;
-        }
-        .welcome-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        .store-name {
-            font-size: 1.25rem;
-            color: #ff4747; /* आपका लाल रंग */
-            font-weight: bold;
-            margin-bottom: 1.875rem;
-        }
-        .google-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: white;
-            border: 0.062rem solid #ccc;
-            padding: 0.625rem 1.25rem;
-            border-radius: 1.5675rem;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0px 0.125rem 0.312rem rgba(0,0,0,0.1);
-            font-size: 1rem;
-            font-weight: bold;
-        }
-        .google-btn img {
-            width: 1.5rem;
-            height: 1.5675rem;
-            margin-right: 0.75rem;
-        }
-        .google-btn:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
+    <title>Sasta Store</title>
 </head>
-<body>
-
-    <div class="login-container">
-        <div class="welcome-text">WELCOME TO</div>
-        <div class="store-name">MARKITO</div>
-        
-        <button class="google-btn" id="googleLoginBtn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
-            Sign in with Google
-        </button>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <script src="database.js"></script>
-  
-
-    <script>
-    // जब यूज़र लॉगिन बटन पर क्लिक करे
-    document.getElementById('googleLoginBtn').addEventListener('click', () => {
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
-        
-        // POPUP का इस्तेमाल करें, यह रीडायरेक्ट लूप को तुरंत तोड़ देता है
-        firebase.auth().signInWithPopup(googleProvider)
-        .then((result) => {
-            const user = result.user;
-            console.log("लॉगिन सफल:", user.displayName);
-            
-            // सीधे होम पेज पर भेजें
-            window.location.href = "index.html"; 
-        })
-        .catch((error) => {
-            console.error("लॉगिन में गड़बड़:", error.message);
-            alert("लॉगिन नहीं हो सका! " + error.message);
-        });
-    });
-
-    // अगर यूज़र पहले से लॉग इन है, तो उसे सीधे होम पेज पर भेज दो
-    firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-            window.location.href = "index.html";
-        }
-    });
-</script>
-
-
+<body style="font-family:sans-serif; text-align:center; padding:50px;">
+    <h1>MARKITO</h1>
+    <p>Best Deals Near You</p>
+    <a href="index.html" style="background:#4285f4; color:white; padding:12px 24px; border-radius:25px; text-decoration:none; font-weight:bold;">Continue to Store</a>
 </body>
 </html>
