@@ -76,24 +76,27 @@ card.setAttribute('data-category', allCategories);
 
                 card.setAttribute('data-distance-km', dist.toFixed(4));
                 
-             let itemsHtml = "";
-                let visibleIndex = 0;
-                let hiddenDivOpened = false;
-                productsArray.forEach((prod) => {
-                    if (prod.stockStatus === "Out of Stock") return;
-                    let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
-                    if (visibleIndex < 1) {
-                        itemsHtml += rowHtml;
-                    } else {
-                        if (!hiddenDivOpened) {
-                            itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
-                            hiddenDivOpened = true;
-                        }
-                        itemsHtml += rowHtml;
-                    }
-                    visibleIndex++;
-                });
-                if (hiddenDivOpened) itemsHtml += `</div>`;   
+            let itemsHtml = "";
+
+const firstProduct = productsArray.find(p => p.stockStatus !== "Out of Stock");
+
+if (firstProduct) {
+    itemsHtml += `<div class="item-row" data-desc="${firstProduct.description || ''}" data-price="${firstProduct.price || 0}">
+        <span>${firstProduct.productName}</span>
+        <span>₹${firstProduct.price}</span>
+    </div>`;
+}
+
+const otherProducts = productsArray.filter(p =>
+    p !== firstProduct && p.stockStatus !== "Out of Stock"
+);
+
+if (otherProducts.length > 0) {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(otherProducts))));
+
+    itemsHtml += `<div id="extra-items-${storeId}" data-products="${encoded}" style="display:none;"></div>`;
+}
+                
 
                 card.innerHTML = `
                        <div class="store-top">
@@ -112,7 +115,7 @@ card.setAttribute('data-category', allCategories);
                         </div>
                     </div>
                     <div class="items-list">${itemsHtml}</div>
-                    ${productsArray.length > 3 ? `<button class="view-all" onclick="toggleItems('extra-items-${storeId}')">View All Items <i class="fa-solid fa-chevron-down"></i></button>` : ''}
+${productsArray.length > 3 ? `<button id="btn-${storeId}" class="view-all" onclick="loadAndToggleItems('${storeId}')">View All Items <i class="fa-solid fa-chevron-down"></i></button>` : ''}
                     <button class="map-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${store.location?.latitude},${store.location?.longitude}', '_blank')">
                         <i class="fa-solid fa-location-dot"></i> MAP ON
                     </button>
@@ -291,7 +294,49 @@ document.getElementById('mainSearch').addEventListener('keypress', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', loadListSystem);
-function toggleItems(id) { const extra = document.getElementById(id); if(extra) extra.style.display = (extra.style.display === "none") ? "block" : "none"; }
+function loadAndToggleItems(storeId) {
+
+    const div = document.getElementById(`extra-items-${storeId}`);
+    const btn = document.getElementById(`btn-${storeId}`);
+
+    if (!div) return;
+
+    // पहली बार क्लिक होने पर बाकी products का HTML बनाओ
+    if (div.innerHTML === "") {
+
+        const arr = JSON.parse(
+            decodeURIComponent(
+                escape(
+                    atob(div.dataset.products)
+                )
+            )
+        );
+
+        let html = "";
+
+        arr.forEach(prod => {
+
+            html += `
+            <div class="item-row"
+                 data-desc="${prod.description || ''}"
+                 data-price="${prod.price || 0}">
+                <span>${prod.productName}</span>
+                <span>₹${prod.price}</span>
+            </div>`;
+        });
+
+        div.innerHTML = html;
+    }
+
+    // Show / Hide
+    if (div.style.display === "none") {
+        div.style.display = "block";
+        btn.innerHTML = 'Hide Items <i class="fa-solid fa-chevron-up"></i>';
+    } else {
+        div.style.display = "none";
+        btn.innerHTML = 'View All Items <i class="fa-solid fa-chevron-down"></i>';
+    }
+}
 function showSuggestions(val) {
     const list = document.getElementById('suggestion-list');
     if (!list) return;
