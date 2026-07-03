@@ -18,58 +18,45 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 // 2. लिस्ट लोड करने का फंक्शन
-// 🎯 2. लिस्ट लोड करने का फंक्शन (फिक्स कोड - 3-3 डाउनलोड करने के लिए)
-let _lastFetchedStoreKey = null; 
-let _allStoresBatchesLoaded = false; 
-
 function loadListSystem() {
     const container = document.querySelector('.container');
     if (!container) return;
 
     navigator.geolocation.getCurrentPosition((pos) => {
-        window._listULat = pos.coords.latitude;
-        window._listULon = pos.coords.longitude;
+        const uLat = pos.coords.latitude;
+        const uLon = pos.coords.longitude;
 
-        // 🎯 फायरबेस से सिर्फ़ पहली 3 दुकानें मंगाओ (पूरा डेटा एक साथ नहीं)
-        let query = firebase.database().ref('stores').orderByKey();
-        query.limitToFirst(3).once('value', (snapshot) => {
-            container.innerHTML = ""; // पुराना सारा स्क्रीन साफ़ करो
-            window._allSortedStores = [];
-
-            snapshot.forEach(child => {
-                const store = child.val();
-                store.id = child.key;
-                window._allSortedStores.push(store);
-                _lastFetchedStoreKey = child.key; // आखिरी दुकान की की (key) बचाओ
-            });
-
-            if (window._allSortedStores.length < 3) _allStoresBatchesLoaded = true;
-            window._listVisibleCount = window._allSortedStores.length;
-
-            let storesArray = [...window._allSortedStores];
-            storesArray = storesArray.filter(store => isStoreOpenNow(store));
-
+        firebase.database().ref('stores').on('value', (snapshot) => {
+            container.innerHTML = "";
+            const stores = snapshot.val();
+            if (!stores) return;
+            
+            // 1. दुकानों की लिस्ट तैयार और सॉर्ट की
+            let storesArray = Object.keys(stores).map(key => ({ id: key, ...stores[key] }));
+          storesArray = storesArray.filter(store => isStoreOpenNow(store));
             storesArray.forEach(store => {
                 let products = Object.values(store.products || {});
-                let dist = calculateDistance(window._listULat, window._listULon, store.location?.latitude || 0, store.location?.longitude || 0);
-                store._distVal = dist;
+                let dist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
+              store._distVal = dist;
                 let travelCost = window.getTravelCost ? window.getTravelCost(dist) : (dist <= 0.5) ? 5 : (dist <= 1) ? 15 : (dist <= 2) ? 25 : (dist <= 3) ? 35 : (dist <= 4) ? 40 : (dist <= 5) ? 50 : (dist <= 6) ? 55 : (dist <= 7) ? 60 : (dist <= 8) ? 70 : (dist <= 9) ? 85 : (dist <= 10) ? 100 : (dist <= 15) ? 200 : (dist <= 20) ? 300 : (dist <= 50) ? 1000 : 2000;
-                let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
-                store.effectivePrice = totalBill + travelCost;
+let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+store.effectivePrice = totalBill + travelCost;
             });
-
             storesArray.sort((a, b) => {
-                if (sortModeList === 'near') {
-                    return a._distVal - b._distVal;
-                }
-                return a.effectivePrice - b.effectivePrice;
-            });
+    if (sortModeList === 'near') {
+        return a._distVal - b._distVal;
+    }
+    return a.effectivePrice - b.effectivePrice;
+});
 
-            const defaultStoresArray = [...storesArray];
+            // 🎯 Bina search ke sirf top 4 dukaan dikhao
+            // 🎯 Bina search ke sirf top 3 dukaan dikhao (lazy loading ke liye)
+            window._allSortedStores = storesArray;
+            window._listVisibleCount = window._listVisibleCount || 3;
+            const defaultStoresArray = storesArray.slice(0, window._listVisibleCount);
 
-            // 🎯 अब सिर्फ इस सॉर्टेड लिस्ट को लूप करें
+            // 2. अब सिर्फ इस सॉर्टेड लिस्ट को लूप करें (पुराना 'for in' लूप हटा दिया)
             defaultStoresArray.forEach((store) => {
-
                 const storeId = store.id;
                 const productsArray = Object.values(store.products || {});
                 if (productsArray.length === 0) return;
