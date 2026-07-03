@@ -18,7 +18,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 // 2. लिस्ट लोड करने का फंक्शन
-
 // 🎯 2. लिस्ट लोड करने का फंक्शन (फिक्स कोड - 3-3 डाउनलोड करने के लिए)
 let _lastFetchedStoreKey = null; 
 let _allStoresBatchesLoaded = false; 
@@ -436,3 +435,13 @@ document.getElementById('mainSearch').addEventListener('input', function(e) {
     showSuggestions(e.target.value);
 });
 
+window.addEventListener('scroll', function() {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const pageHeight = document.body.offsetHeight;
+    if (scrollPosition >= pageHeight - 400) {
+        if (window._allSortedStores && window._listVisibleCount < window._allSortedStores.length) {
+            window._listVisibleCount += 3;
+            loadListSystem();
+        }
+    }
+});
