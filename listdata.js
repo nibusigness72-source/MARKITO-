@@ -172,12 +172,12 @@ function startSearch() {
     const mainInput = document.getElementById('mainSearch').value.toLowerCase().trim();
 
     // 🔥 Firebase se direct search bhi karo - poora data nahi, sirf matching products check
-    if (mainInput.length >= 2) {
+    
+            if (mainInput.length >= 2) {
         const existsLocally = Array.from(document.querySelectorAll('.item-row span:first-child'))
             .some(span => span.textContent.toLowerCase().startsWith(mainInput));
 
-if (!existsLocally) {
-            firebase.database().ref('all_products')
+if (!existsLocally) {firebase.database().ref('all_products')
                 .orderByChild('productNameLower')
                 .startAt(mainInput)
                 .endAt(mainInput + '\uf8ff')
@@ -350,34 +350,6 @@ function showSuggestions(val) {
     const mainWord = parts[0];
     const fw = parts.slice(1).join(' ').trim();
 
-  // 🔥 customer.js jaisa: suggestions ke liye bhi Firebase se live check karo
-    if (mainWord.length >= 2) {
-        firebase.database().ref('all_products')
-            .orderByChild('productNameLower')
-            .startAt(mainWord)
-            .endAt(mainWord + '\uf8ff')
-            .limitToFirst(10)
-            .once('value', (snapshot) => {
-                snapshot.forEach(child => {
-                    const prod = child.val();
-                    const sId = prod.storeId;
-                    if (!sId) return;
-                    const alreadyHaveStore = (window._allSortedStores || []).some(s => s.id === sId);
-                    if (!alreadyHaveStore) {
-                        firebase.database().ref('stores/' + sId).once('value', (storeSnap) => {
-                            const storeData = storeSnap.val();
-                            if (storeData && isStoreOpenNow(storeData)) {
-                                storeData.id = sId;
-                                storeData._distVal = calculateDistance(_listULat || 0, _listULon || 0, storeData.location?.latitude || 0, storeData.location?.longitude || 0);
-                                window._allSortedStores = window._allSortedStores || [];
-                                window._allSortedStores.push(storeData);
-                                renderStoreCard(storeData, document.querySelector('.container'));
-                            }
-                        });
-                    }
-                });
-            });
-    }
     let suggestions = [];
     let suggestionKeys = new Set();
 
