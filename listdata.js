@@ -176,7 +176,7 @@ function startSearch() {
         const existsLocally = Array.from(document.querySelectorAll('.item-row span:first-child'))
             .some(span => span.textContent.toLowerCase().startsWith(mainInput));
 
-if (!existsLocally) {
+if (!existsLocally) 
             firebase.database().ref('all_products')
                 .orderByChild('productNameLower')
                 .startAt(mainInput)
@@ -201,12 +201,11 @@ if (!existsLocally) {
                                     const container = document.querySelector('.container');
                                     renderStoreCard(storeData, container);
                                     startSearch(); // naya card bhi turant sahi se search-filter ho jaye
-                                }
-                            });
+                                
+    });
                         }
                     });
                 });
-}
     }
     const searchTerms = [...new Set([...tags, ...(mainInput ? [mainInput] : [])])];
     const totalSearched = searchTerms.length;
@@ -346,6 +345,34 @@ function showSuggestions(val) {
     if (val === "") { list.style.display = "none"; return; }
 
     const searchText = val.toLowerCase().trim();
+  // 🔥 customer.js jaisa: suggestions ke liye bhi Firebase se live check karo
+    if (searchText.length >= 2) {
+        firebase.database().ref('all_products')
+            .orderByChild('productNameLower')
+            .startAt(searchText)
+            .endAt(searchText + '\uf8ff')
+            .limitToFirst(10)
+            .once('value', (snapshot) => {
+                snapshot.forEach(child => {
+                    const prod = child.val();
+                    const sId = prod.storeId;
+                    if (!sId) return;
+                    const alreadyHaveStore = (window._allSortedStores || []).some(s => s.id === sId);
+                    if (!alreadyHaveStore) {
+                        firebase.database().ref('stores/' + sId).once('value', (storeSnap) => {
+                            const storeData = storeSnap.val();
+                            if (storeData && isStoreOpenNow(storeData)) {
+                                storeData.id = sId;
+                                storeData._distVal = calculateDistance(_listULat || 0, _listULon || 0, storeData.location?.latitude || 0, storeData.location?.longitude || 0);
+                                window._allSortedStores = window._allSortedStores || [];
+                                window._allSortedStores.push(storeData);
+                                renderStoreCard(storeData, document.querySelector('.container'));
+                            }
+                        });
+                    }
+                });
+            });
+    }
     const parts = searchText.split(/\s+/);
     const mainWord = parts[0];
     const fw = parts.slice(1).join(' ').trim();
