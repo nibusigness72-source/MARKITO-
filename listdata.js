@@ -390,7 +390,7 @@ function showSuggestions(val) {
             });
         }
 
-        // direct gender
+  // direct gender
         genders.forEach(g => {
             if (g.toLowerCase().startsWith(fw)) {
                 addSug(`${pName} ${g}`);
