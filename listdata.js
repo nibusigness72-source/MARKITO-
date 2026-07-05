@@ -176,7 +176,7 @@ function startSearch() {
         const existsLocally = Array.from(document.querySelectorAll('.item-row span:first-child'))
             .some(span => span.textContent.toLowerCase().startsWith(mainInput));
 
-if (!existsLocally) 
+if (!existsLocally) {
             firebase.database().ref('all_products')
                 .orderByChild('productNameLower')
                 .startAt(mainInput)
@@ -201,11 +201,12 @@ if (!existsLocally)
                                     const container = document.querySelector('.container');
                                     renderStoreCard(storeData, container);
                                     startSearch(); // naya card bhi turant sahi se search-filter ho jaye
-                                
-    });
+                                }
+                            });
                         }
                     });
                 });
+}
     }
     const searchTerms = [...new Set([...tags, ...(mainInput ? [mainInput] : [])])];
     const totalSearched = searchTerms.length;
@@ -345,12 +346,16 @@ function showSuggestions(val) {
     if (val === "") { list.style.display = "none"; return; }
 
     const searchText = val.toLowerCase().trim();
+    const parts = searchText.split(/\s+/);
+    const mainWord = parts[0];
+    const fw = parts.slice(1).join(' ').trim();
+
   // 🔥 customer.js jaisa: suggestions ke liye bhi Firebase se live check karo
-    if (searchText.length >= 2) {
+    if (mainWord.length >= 2) {
         firebase.database().ref('all_products')
             .orderByChild('productNameLower')
-            .startAt(searchText)
-            .endAt(searchText + '\uf8ff')
+            .startAt(mainWord)
+            .endAt(mainWord + '\uf8ff')
             .limitToFirst(10)
             .once('value', (snapshot) => {
                 snapshot.forEach(child => {
@@ -373,10 +378,6 @@ function showSuggestions(val) {
                 });
             });
     }
-    const parts = searchText.split(/\s+/);
-    const mainWord = parts[0];
-    const fw = parts.slice(1).join(' ').trim();
-
     let suggestions = [];
     let suggestionKeys = new Set();
 
