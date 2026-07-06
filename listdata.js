@@ -353,6 +353,45 @@ function showSuggestions(val) {
     let suggestions = [];
     let suggestionKeys = new Set();
 
+  // 🔥 Firebase se un-loaded products ke sirf NAAM suggestions mein dikhane ke liye (koi card nahi banega)
+    if (mainWord.length >= 1) {
+        firebase.database().ref('all_products')
+            .orderByChild('productNameLower')
+            .startAt(mainWord)
+            .endAt(mainWord + '\uf8ff')
+            .limitToFirst(8)
+            .once('value', (snapshot) => {
+                let gotNew = false;
+                snapshot.forEach(child => {
+                    const prod = child.val();
+                    if (prod.productName) {
+                        const key = prod.productName.toLowerCase();
+                        if (!suggestionKeys.has(key)) {
+                            suggestionKeys.add(key);
+                            suggestions.push(prod.productName);
+                            gotNew = true;
+                        }
+                    }
+                });
+                if (gotNew) {
+                    list.innerHTML = "";
+                    list.style.display = "block";
+                    suggestions.slice(0, 8).forEach(m => {
+                        const item = document.createElement('div');
+                        item.style.cssText = "padding:10px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid #f9f9f9; color:#333; text-align:left; font-weight:bold; background:#fff;";
+                        item.innerHTML = `🔍 ${m}`;
+                        item.onclick = () => {
+                            document.getElementById('mainSearch').value = m;
+                            addTag(m);
+                            document.getElementById('mainSearch').value = "";
+                            list.style.display = "none";
+                        };
+                        list.appendChild(item);
+                    });
+                }
+            });
+    }
+
     function addSug(label) {
         const key = label.toLowerCase();
         if (!suggestionKeys.has(key)) { suggestionKeys.add(key); suggestions.push(label); }
