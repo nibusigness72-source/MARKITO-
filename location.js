@@ -53,7 +53,7 @@ async function handleLocationSystem(manualStatus, lat, lon) {
                 locText.innerText = "Semapur, Bihar";
             }
         }
-        if(locBtn) {
+        if(locBar && locBtn) {
             locBtn.innerText = "ON";
             locBtn.style.background = "#2e7d32";
             locBtn.onclick = () => handleLocationSystem("OFF");
@@ -81,7 +81,6 @@ async function handleLocationSystem(manualStatus, lat, lon) {
     }
 }
 
-// शुरू में सिर्फ होम पेज को OFF (Blur) मोड में रखें
 // --- रिफ्रेश चेक करने का नया कोड (इसे फ़ाइल के सबसे नीचे लगाएँ) ---
 window.addEventListener('load', () => {
     // 1. अगर प्रोफाइल या अकाउंट वाला पेज खुला है, तो हमेशा ऑन रखें
@@ -101,18 +100,16 @@ window.addEventListener('load', () => {
                 navigator.geolocation.getCurrentPosition((position) => {
                     handleLocationSystem("ON", position.coords.latitude, position.coords.longitude);
                 }, () => {
-                    // अगर किसी एरर की वजह से लोकेशन न मिले तो ही बंद करें
-                    handleLocationSystem("OFF");
+                    // बदला हुआ हिस्सा: एरर आने पर भी अब OFF नहीं, हमेशा ON रहेगा (साफ़ दिखेगा)
+                    handleLocationSystem("ON");
                 });
             } else {
-                // अगर पहली बार पेज खुला है या परमिशन नहीं है, तो ब्लर मोड में रखें
-                handleLocationSystem("OFF");
+                // बदला हुआ हिस्सा: पहली बार पेज खुलने पर भी अब ब्लर नहीं होगा, सीधे ON मोड में खुलेगा
+                handleLocationSystem("ON");
             }
         });
     } else {
-        // अगर मोबाइल का ब्राउज़र पुराना है और चेक नहीं कर पा रहा है
-        handleLocationSystem("OFF");
+        // बदला हुआ हिस्सा: पुराने ब्राउज़र में भी सीधे ON मोड में खुलेगा
+        handleLocationSystem("ON");
     }
 });
-
-
