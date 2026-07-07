@@ -17,7 +17,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) * 1.7;
 }
 
-// 2. लिस्ट लोड करने का फंक्शन
 // ==========================================
 // 🌍 LIST PAGE - BATCH FETCHER (customer.js ke fetchProductsBatch jaisa hi tareeka)
 // ==========================================
@@ -110,7 +109,7 @@ function renderStoreCard(store, container) {
     window.lazyLoadAll && window.lazyLoadAll();
 }
 
-function processAndRenderBatch(rawStores, container, isFirstBatch) {
+function processAndRenderBatch(rawStores, container) {
     let storesArray = rawStores.filter(store => isStoreOpenNow(store));
 
     storesArray.forEach(store => {
@@ -122,27 +121,22 @@ function processAndRenderBatch(rawStores, container, isFirstBatch) {
         store.effectivePrice = totalBill + travelCost;
     });
 
+    // Isi chhote batch ke andar sort (customer.js jaisa hi compromise)
     storesArray.sort((a, b) => {
         if (sortModeList === 'near') return a._distVal - b._distVal;
         return a.effectivePrice - b.effectivePrice;
     });
 
     window._allSortedStores = (window._allSortedStores || []).concat(storesArray);
-
-    // 👇 YEHI ASLI FIX HAI: skeleton sirf tab hatao jab pehla asli batch mil chuka ho
-    if (isFirstBatch) {
-        container.innerHTML = "";
-    }
-
     storesArray.forEach(store => renderStoreCard(store, container));
 }
 
-// 2. लिस्ट लोड करने का फंक्शन (customer.js jaisa hi asli batch-by-batch)
+// 2. लिस्ट लोड करने का फंक्शन (ab customer.js jaisa hi asli batch-by-batch)
 function loadListSystem() {
     const container = document.querySelector('.container');
     if (!container) return;
 
-    // 👆 dhyan do: yahan container.innerHTML = ""; NAHI hai — skeleton turant nahi hataya
+    container.innerHTML = "";
     _lastFetchedStoreKey = null;
     _allStoreBatchesLoaded = false;
     _isFetchingStoreBatch = false;
@@ -160,7 +154,7 @@ function loadListSystem() {
 
     function loadFirstBatch() {
         fetchStoresBatch(3, (newStores) => {
-            processAndRenderBatch(newStores, container, true);
+            processAndRenderBatch(newStores, container);
         });
     }
 }
@@ -172,12 +166,12 @@ function startSearch() {
     const mainInput = document.getElementById('mainSearch').value.toLowerCase().trim();
 
     // 🔥 Firebase se direct search bhi karo - poora data nahi, sirf matching products check
-    
-            if (mainInput.length >= 2) {
+    if (mainInput.length >= 2) {
         const existsLocally = Array.from(document.querySelectorAll('.item-row span:first-child'))
             .some(span => span.textContent.toLowerCase().startsWith(mainInput));
 
-if (!existsLocally) {firebase.database().ref('all_products')
+        if (!existsLocally) {
+            firebase.database().ref('all_products')
                 .orderByChild('productNameLower')
                 .startAt(mainInput)
                 .endAt(mainInput + '\uf8ff')
@@ -193,20 +187,14 @@ if (!existsLocally) {firebase.database().ref('all_products')
                                 const storeData = storeSnap.val();
                                 if (storeData && isStoreOpenNow(storeData)) {
                                     storeData.id = sId;
-                                    storeData._distVal = calculateDistance(_listULat || 0, _listULon || 0, storeData.location?.latitude || 0, storeData.location?.longitude || 0);
                                     window._allSortedStores = window._allSortedStores || [];
                                     window._allSortedStores.push(storeData);
-
-                                    // 👇 YEHI ASLI FIX: naya card banao jo pehle load hi nahi hua tha
-                                    const container = document.querySelector('.container');
-                                    renderStoreCard(storeData, container);
-                                    startSearch(); // naya card bhi turant sahi se search-filter ho jaye
                                 }
                             });
                         }
                     });
                 });
-}
+        }
     }
     const searchTerms = [...new Set([...tags, ...(mainInput ? [mainInput] : [])])];
     const totalSearched = searchTerms.length;
@@ -353,45 +341,6 @@ function showSuggestions(val) {
     let suggestions = [];
     let suggestionKeys = new Set();
 
-  // 🔥 Firebase se un-loaded products ke sirf NAAM suggestions mein dikhane ke liye (koi card nahi banega)
-    if (mainWord.length >= 1) {
-        firebase.database().ref('all_products')
-            .orderByChild('productNameLower')
-            .startAt(mainWord)
-            .endAt(mainWord + '\uf8ff')
-            .limitToFirst(8)
-            .once('value', (snapshot) => {
-                let gotNew = false;
-                snapshot.forEach(child => {
-                    const prod = child.val();
-                    if (prod.productName) {
-                        const key = prod.productName.toLowerCase();
-                        if (!suggestionKeys.has(key)) {
-                            suggestionKeys.add(key);
-                            suggestions.push(prod.productName);
-                            gotNew = true;
-                        }
-                    }
-                });
-                if (gotNew) {
-                    list.innerHTML = "";
-                    list.style.display = "block";
-                    suggestions.slice(0, 8).forEach(m => {
-                        const item = document.createElement('div');
-                        item.style.cssText = "padding:10px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid #f9f9f9; color:#333; text-align:left; font-weight:bold; background:#fff;";
-                        item.innerHTML = `🔍 ${m}`;
-                        item.onclick = () => {
-                            document.getElementById('mainSearch').value = m;
-                            addTag(m);
-                            document.getElementById('mainSearch').value = "";
-                            list.style.display = "none";
-                        };
-                        list.appendChild(item);
-                    });
-                }
-            });
-    }
-
     function addSug(label) {
         const key = label.toLowerCase();
         if (!suggestionKeys.has(key)) { suggestionKeys.add(key); suggestions.push(label); }
@@ -476,7 +425,7 @@ function showSuggestions(val) {
             });
         }
 
-        // direct gender
+   // direct gender
         genders.forEach(g => {
             if (g.toLowerCase().startsWith(fw)) {
                 addSug(`${pName} ${g}`);
@@ -515,7 +464,7 @@ window.addEventListener('scroll', function() {
         _isFetchingStoreBatch = true;
         const container = document.querySelector('.container');
         fetchStoresBatch(3, (newStores) => {
-            processAndRenderBatch(newStores, container, false);
+            processAndRenderBatch(newStores, container);
             _isFetchingStoreBatch = false;
         });
     }
