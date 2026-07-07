@@ -17,146 +17,111 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) * 1.7;
 }
 
-// ==========================================
-// 🌍 LIST PAGE - BATCH FETCHER (customer.js ke fetchProductsBatch jaisa hi tareeka)
-// ==========================================
-let _lastFetchedStoreKey = null;
-let _allStoreBatchesLoaded = false;
-let _isFetchingStoreBatch = false;
-let _listULat = null;
-let _listULon = null;
-
-function fetchStoresBatch(batchSize, callback) {
-    let query = firebase.database().ref('stores').orderByKey();
-    if (_lastFetchedStoreKey) {
-        query = query.startAfter(_lastFetchedStoreKey);
-    }
-    query.limitToFirst(batchSize).once('value', (snapshot) => {
-        const newStores = [];
-        snapshot.forEach(child => {
-            newStores.push({ id: child.key, ...child.val() });
-            _lastFetchedStoreKey = child.key;
-        });
-        if (newStores.length < batchSize) {
-            _allStoreBatchesLoaded = true;
-        }
-        callback(newStores);
-    });
-}
-
-function renderStoreCard(store, container) {
-    const productsArray = Object.values(store.products || {});
-    if (productsArray.length === 0) return;
-
-    const storeId = store.id;
-    const dist = store._distVal;
-    const distText = dist < 1 ? (dist * 1000).toFixed(0) + " m" : dist.toFixed(1) + " km";
-    const shopName = store.shopName || "सस्ता स्टोर";
-    const photo = (store.photos && store.photos[0]) ? store.photos[0] : 'rasgulla.jpg';
-    const firstVisibleProduct = productsArray.find(p => p.stockStatus !== "Out of Stock");
-    const totalBill = firstVisibleProduct ? parseFloat(firstVisibleProduct.price || 0) : 0;
-    const availableCount = productsArray.filter(p => p.stockStatus !== "Out of Stock").length;
-
-    const card = document.createElement('div');
-    card.className = 'store-card';
-    const allCategories = productsArray.map(p => (p.category || "")).join(",").toLowerCase();
-    card.setAttribute('data-category', allCategories);
-    card.setAttribute('data-distance-km', dist.toFixed(4));
-
-    let itemsHtml = "";
-    let visibleIndex = 0;
-    let hiddenDivOpened = false;
-    productsArray.forEach((prod) => {
-        if (prod.stockStatus === "Out of Stock") return;
-        let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
-        if (visibleIndex < 1) {
-            itemsHtml += rowHtml;
-        } else {
-            if (!hiddenDivOpened) {
-                itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
-                hiddenDivOpened = true;
-            }
-            itemsHtml += rowHtml;
-        }
-        visibleIndex++;
-    });
-    if (hiddenDivOpened) itemsHtml += `</div>`;
-
-    card.innerHTML = `
-           <div class="store-top">
-            <img src="${photo}" class="store-img">
-            <div class="store-details">
-                <h2 class="store-name">${shopName}</h2>
-                <div class="dist-tag" style="color:green; font-weight:bold;">${distText}</div>
-            </div>
-        </div>
-        <div class="deal-stats">
-            <div>
-                <small style="color:#666;">Total Bill</small><br><strong>₹${totalBill}</strong>
-            </div>
-            <div class="line"></div>
-            <div>
-                <small style="color:#666;">Available</small><br><strong>${availableCount}/25</strong>
-            </div>
-        </div>
-        <div class="items-list">${itemsHtml}</div>
-        ${productsArray.length > 3 ? `<button class="view-all" onclick="toggleItems('extra-items-${storeId}')">View All Items <i class="fa-solid fa-chevron-down"></i></button>` : ''}
-        <button class="map-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${store.location?.latitude},${store.location?.longitude}', '_blank')">
-            <i class="fa-solid fa-location-dot"></i> MAP ON
-        </button>
-    `;
-    container.appendChild(card);
-    window.lazyLoadAll && window.lazyLoadAll();
-}
-
-function processAndRenderBatch(rawStores, container) {
-    let storesArray = rawStores.filter(store => isStoreOpenNow(store));
-
-    storesArray.forEach(store => {
-        let products = Object.values(store.products || {});
-        let dist = calculateDistance(_listULat || 0, _listULon || 0, store.location?.latitude || 0, store.location?.longitude || 0);
-        store._distVal = dist;
-        let travelCost = window.getTravelCost ? window.getTravelCost(dist) : (dist <= 0.5) ? 5 : (dist <= 1) ? 15 : (dist <= 2) ? 25 : (dist <= 3) ? 35 : (dist <= 4) ? 40 : (dist <= 5) ? 50 : (dist <= 6) ? 55 : (dist <= 7) ? 60 : (dist <= 8) ? 70 : (dist <= 9) ? 85 : (dist <= 10) ? 100 : (dist <= 15) ? 200 : (dist <= 20) ? 300 : (dist <= 50) ? 1000 : 2000;
-        let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
-        store.effectivePrice = totalBill + travelCost;
-    });
-
-    // Isi chhote batch ke andar sort (customer.js jaisa hi compromise)
-    storesArray.sort((a, b) => {
-        if (sortModeList === 'near') return a._distVal - b._distVal;
-        return a.effectivePrice - b.effectivePrice;
-    });
-
-    window._allSortedStores = (window._allSortedStores || []).concat(storesArray);
-    storesArray.forEach(store => renderStoreCard(store, container));
-}
-
-// 2. लिस्ट लोड करने का फंक्शन (ab customer.js jaisa hi asli batch-by-batch)
+// 2. लिस्ट लोड करने का फंक्शन
 function loadListSystem() {
     const container = document.querySelector('.container');
     if (!container) return;
 
-    container.innerHTML = "";
-    _lastFetchedStoreKey = null;
-    _allStoreBatchesLoaded = false;
-    _isFetchingStoreBatch = false;
-    window._allSortedStores = [];
-
     navigator.geolocation.getCurrentPosition((pos) => {
-        _listULat = pos.coords.latitude;
-        _listULon = pos.coords.longitude;
-        loadFirstBatch();
-    }, () => {
-        _listULat = 0;
-        _listULon = 0;
-        loadFirstBatch();
-    });
+        const uLat = pos.coords.latitude;
+        const uLon = pos.coords.longitude;
 
-    function loadFirstBatch() {
-        fetchStoresBatch(3, (newStores) => {
-            processAndRenderBatch(newStores, container);
-        });
+        firebase.database().ref('stores').on('value', (snapshot) => {
+            container.innerHTML = "";
+            const stores = snapshot.val();
+            if (!stores) return;
+            
+            // 1. दुकानों की लिस्ट तैयार और सॉर्ट की
+            let storesArray = Object.keys(stores).map(key => ({ id: key, ...stores[key] }));
+          storesArray = storesArray.filter(store => isStoreOpenNow(store));
+            storesArray.forEach(store => {
+                let products = Object.values(store.products || {});
+                let dist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
+              store._distVal = dist;
+                let travelCost = window.getTravelCost ? window.getTravelCost(dist) : (dist <= 0.5) ? 5 : (dist <= 1) ? 15 : (dist <= 2) ? 25 : (dist <= 3) ? 35 : (dist <= 4) ? 40 : (dist <= 5) ? 50 : (dist <= 6) ? 55 : (dist <= 7) ? 60 : (dist <= 8) ? 70 : (dist <= 9) ? 85 : (dist <= 10) ? 100 : (dist <= 15) ? 200 : (dist <= 20) ? 300 : (dist <= 50) ? 1000 : 2000;
+let totalBill = products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+store.effectivePrice = totalBill + travelCost;
+            });
+            storesArray.sort((a, b) => {
+    if (sortModeList === 'near') {
+        return a._distVal - b._distVal;
     }
+    return a.effectivePrice - b.effectivePrice;
+});
+
+            // 🎯 Bina search ke sirf top 4 dukaan dikhao
+            // 🎯 Bina search ke sirf top 3 dukaan dikhao (lazy loading ke liye)
+            window._allSortedStores = storesArray;
+            window._listVisibleCount = window._listVisibleCount || 3;
+            const defaultStoresArray = storesArray.slice(0, window._listVisibleCount);
+
+            // 2. अब सिर्फ इस सॉर्टेड लिस्ट को लूप करें (पुराना 'for in' लूप हटा दिया)
+            defaultStoresArray.forEach((store) => {
+                const storeId = store.id;
+                const productsArray = Object.values(store.products || {});
+                if (productsArray.length === 0) return;
+
+                const dist = calculateDistance(uLat, uLon, store.location?.latitude || 0, store.location?.longitude || 0);
+                const distText = dist < 1 ? (dist * 1000).toFixed(0) + " m" : dist.toFixed(1) + " km";
+                const shopName = store.shopName || "सस्ता स्टोर";
+                const photo = (store.photos && store.photos[0]) ? store.photos[0] : 'rasgulla.jpg';
+                const firstVisibleProduct = productsArray.find(p => p.stockStatus !== "Out of Stock");
+                const totalBill = firstVisibleProduct ? parseFloat(firstVisibleProduct.price || 0) : 0;
+                const availableCount = productsArray.filter(p => p.stockStatus !== "Out of Stock").length;
+                
+                const card = document.createElement('div');
+                card.className = 'store-card';
+const allCategories = productsArray.map(p => (p.category || "")).join(",").toLowerCase();
+card.setAttribute('data-category', allCategories);
+
+                card.setAttribute('data-distance-km', dist.toFixed(4));
+                
+             let itemsHtml = "";
+                let visibleIndex = 0;
+                let hiddenDivOpened = false;
+                productsArray.forEach((prod) => {
+                    if (prod.stockStatus === "Out of Stock") return;
+                    let rowHtml = `<div class="item-row" data-desc="${prod.description || ''}" data-price="${prod.price || 0}"><span>${prod.productName}</span> <span>₹${prod.price}</span></div>`;
+                    if (visibleIndex < 1) {
+                        itemsHtml += rowHtml;
+                    } else {
+                        if (!hiddenDivOpened) {
+                            itemsHtml += `<div id="extra-items-${storeId}" style="display: none;">`;
+                            hiddenDivOpened = true;
+                        }
+                        itemsHtml += rowHtml;
+                    }
+                    visibleIndex++;
+                });
+                if (hiddenDivOpened) itemsHtml += `</div>`;   
+
+                card.innerHTML = `
+                       <div class="store-top">
+                        <img src="${photo}" class="store-img">
+                        <div class="store-details">
+                            <h2 class="store-name">${shopName}</h2>
+                            <div class="dist-tag" style="color:green; font-weight:bold;">${distText}</div>
+                        </div>
+                    </div>
+                    <div class="stats-box" style="display:flex; border:1px solid #ddd; border-radius:8px; margin:10px 0; overflow:hidden;">
+                        <div style="flex:1; text-align:center; padding:8px; border-right:1px solid #ddd;">
+                            <small style="color:#666;">Total Bill</small><br><strong>₹${totalBill}</strong>
+                        </div>
+                        <div style="flex:1; text-align:center; padding:8px;">
+                            <small style="color:#666;">Available</small><br><strong>${availableCount}/25</strong>
+                        </div>
+                    </div>
+                    <div class="items-list">${itemsHtml}</div>
+                    ${productsArray.length > 3 ? `<button class="view-all" onclick="toggleItems('extra-items-${storeId}')">View All Items <i class="fa-solid fa-chevron-down"></i></button>` : ''}
+                    <button class="map-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${store.location?.latitude},${store.location?.longitude}', '_blank')">
+                        <i class="fa-solid fa-location-dot"></i> MAP ON
+                    </button>
+                `;
+                container.appendChild(card);
+              window.lazyLoadAll && window.lazyLoadAll();
+            });
+        });
+    });
 }
 
 
@@ -425,7 +390,7 @@ function showSuggestions(val) {
             });
         }
 
-   // direct gender
+// direct gender
         genders.forEach(g => {
             if (g.toLowerCase().startsWith(fw)) {
                 addSug(`${pName} ${g}`);
@@ -460,12 +425,10 @@ document.getElementById('mainSearch').addEventListener('input', function(e) {
 window.addEventListener('scroll', function() {
     const scrollPosition = window.innerHeight + window.scrollY;
     const pageHeight = document.body.offsetHeight;
-    if (scrollPosition >= pageHeight - 400 && !_allStoreBatchesLoaded && !_isFetchingStoreBatch) {
-        _isFetchingStoreBatch = true;
-        const container = document.querySelector('.container');
-        fetchStoresBatch(3, (newStores) => {
-            processAndRenderBatch(newStores, container);
-            _isFetchingStoreBatch = false;
-        });
+    if (scrollPosition >= pageHeight - 400) {
+        if (window._allSortedStores && window._listVisibleCount < window._allSortedStores.length) {
+            window._listVisibleCount += 3;
+            loadListSystem();
+        }
     }
 });
