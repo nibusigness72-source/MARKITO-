@@ -111,8 +111,7 @@ function renderStoreCard(store, container) {
 }
 
 function processAndRenderBatch(rawStores, container, isFirstBatch) {
- const alreadyRenderedIds = new Set((window._allSortedStores || []).map(s => s.id));
-    let storesArray = rawStores.filter(store => isStoreOpenNow(store) && !alreadyRenderedIds.has(store.id));
+    let storesArray = rawStores.filter(store => isStoreOpenNow(store));
 
     storesArray.forEach(store => {
         let products = Object.values(store.products || {});
@@ -139,13 +138,11 @@ function processAndRenderBatch(rawStores, container, isFirstBatch) {
 }
 
 // 2. लिस्ट लोड करने का फंक्शन (customer.js jaisa hi asli batch-by-batch)
-// 2. लिस्ट लोड करने का फंक्शन (pehle 4 featured dukaanein, turant baad normal 3-3 shuru)
-const FEATURED_STORE_UIDS = ["I5bEeHFRucZJPzfYDyCZfZevA6P2", "HLboo0WgBDOQwB1Ce7ZYeFPR4kG2", "YpWOftFJPvUHyirJ0eA01jB5hQo2", "iTeVU3iF5mVyojYtUxZr9ximMvf2"];
-
 function loadListSystem() {
     const container = document.querySelector('.container');
     if (!container) return;
 
+    // 👆 dhyan do: yahan container.innerHTML = ""; NAHI hai — skeleton turant nahi hataya
     _lastFetchedStoreKey = null;
     _allStoreBatchesLoaded = false;
     _isFetchingStoreBatch = false;
@@ -154,32 +151,20 @@ function loadListSystem() {
     navigator.geolocation.getCurrentPosition((pos) => {
         _listULat = pos.coords.latitude;
         _listULon = pos.coords.longitude;
-        loadFeaturedThenRest();
+        loadFirstBatch();
     }, () => {
         _listULat = 0;
         _listULon = 0;
-        loadFeaturedThenRest();
+        loadFirstBatch();
     });
 
-    function loadFeaturedThenRest() {
-        const fetches = FEATURED_STORE_UIDS.map(uid =>
-            firebase.database().ref('stores/' + uid).once('value')
-        );
-        Promise.all(fetches).then(snapshots => {
-            const rawStores = [];
-            snapshots.forEach((snap, i) => {
-                const data = snap.val();
-                if (data) rawStores.push({ id: FEATURED_STORE_UIDS[i], ...data });
-            });
-            processAndRenderBatch(rawStores, container, true);
-
-            // 👇 YEHI FIX HAI: featured dikhne ke turant baad, normal batch-loading khud shuru ho jaati hai
-            fetchStoresBatch(3, (newStores) => {
-                processAndRenderBatch(newStores, container, false);
-            });
+    function loadFirstBatch() {
+        fetchStoresBatch(3, (newStores) => {
+            processAndRenderBatch(newStores, container, true);
         });
     }
 }
+
 
 // 3. सर्च और फिल्टर का एकमात्र फंक्शन
 function startSearch() {
@@ -192,9 +177,7 @@ function startSearch() {
         const existsLocally = Array.from(document.querySelectorAll('.item-row span:first-child'))
             .some(span => span.textContent.toLowerCase().startsWith(mainInput));
 
-if (!existsLocally) {
-    window._storesBeingFetched = window._storesBeingFetched || new Set();
-    firebase.database().ref('all_products')
+if (!existsLocally) {firebase.database().ref('all_products')
                 .orderByChild('productNameLower')
                 .startAt(mainInput)
                 .endAt(mainInput + '\uf8ff')
@@ -205,8 +188,7 @@ if (!existsLocally) {
                         const sId = prod.storeId;
                         if (!sId) return;
                         const alreadyHaveStore = (window._allSortedStores || []).some(s => s.id === sId);
-                        if (!alreadyHaveStore && !window._storesBeingFetched.has(sId)) {
-                            window._storesBeingFetched.add(sId);
+                        if (!alreadyHaveStore) {
                             firebase.database().ref('stores/' + sId).once('value', (storeSnap) => {
                                 const storeData = storeSnap.val();
                                 if (storeData && isStoreOpenNow(storeData)) {
@@ -215,9 +197,10 @@ if (!existsLocally) {
                                     window._allSortedStores = window._allSortedStores || [];
                                     window._allSortedStores.push(storeData);
 
+                                    // 👇 YEHI ASLI FIX: naya card banao jo pehle load hi nahi hua tha
                                     const container = document.querySelector('.container');
                                     renderStoreCard(storeData, container);
-                                    startSearch();
+                                    startSearch(); // naya card bhi turant sahi se search-filter ho jaye
                                 }
                             });
                         }
