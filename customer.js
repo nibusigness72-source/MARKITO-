@@ -174,7 +174,7 @@ const googleMapUrl = `https://www.google.com/maps?q=${product.lat},${product.lon
                 <img src="${product.photo || 'rasgulla.jpg'}" alt="${product.productName}">
                 <div class="product-info">
                     <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
-                    <span class="product-price">₹${product.price}</span>
+                   <span class="product-price" style="color: #2e7d32; font-weight:bold;">₹${product.price || 0}</span>
 <span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="event.stopPropagation(); openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
 
                     <span class="distance">📍 ${distanceTxt}</span>
@@ -365,6 +365,14 @@ matchingProds.forEach(prod => {
         return;
     }
 
+  // 🔧 NEW: bina "size" keyword ke bhi — agar poora fw kisi size se EXACT match kare
+    // (letter ho jaise XL, ya number jaise 40/42) to bhi size maan lo
+    const exactSizeMatch = sizes.find(s => s.toLowerCase() === fw);
+    if (exactSizeMatch) {
+        addSug(`${pName} size ${exactSizeMatch}`);
+        priceSteps.forEach(step => addSug(`${pName} size ${exactSizeMatch} under ${step}`));
+        return;
+    }
     // "size X" ya "s X"
     const sizeOnly = fw.match(/^size\s*(\S*)$/) || fw.match(/^s\s+(\S+)$/);
     if (sizeOnly) {
@@ -488,7 +496,15 @@ const nameMatch = pName.includes(mainWord);
 if (!tagMatch && !nameMatch) return false;  // ✅ Tags ko priority!
       
         if (price > maxPrice) return false;
-        if (sizeFilter && !prodSizes.includes(sizeFilter)) return false;
+
+        // 🔧 NEW: agar "size" keyword nahi likha, to bhi baaki bache hue shabdon mein
+        // se koi is product ki size se EXACT match kare to size filter maano
+        let effectiveSizeFilter = sizeFilter;
+        if (!effectiveSizeFilter) {
+            const leftoverMatch = parts.find(p => prodSizes.includes(p.toUpperCase()));
+            if (leftoverMatch) effectiveSizeFilter = leftoverMatch.toUpperCase();
+        }
+        if (effectiveSizeFilter && !prodSizes.includes(effectiveSizeFilter)) return false;
         if (genderFilter && !prodGenders.some(g => g.includes(genderFilter))) return false;
         if (ageFilter && !prodAges.some(a => a.includes(ageFilter))) return false;
         return true;
@@ -593,7 +609,7 @@ productCard.setAttribute('data-prodname', product.productName);
                     <img src="${product.photo || 'rasgulla.jpg'}" alt="${product.productName}">
                     <div class="product-info">
                         <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
-                        <span class="product-price">₹${product.price}</span>
+                        <span class="product-price" style="color: #2e7d32; font-weight:bold;">₹${product.price || 0}</span>
                         <span class="store-name">🏪 ${product.storeName}</span>
                         <span class="distance">📍 ${distanceTxt}</span>
                         <a href="${googleMapUrl}" target="_blank" class="map-btn">Map on 📍</a>
@@ -625,7 +641,7 @@ productCard.setAttribute('data-prodname', product.productName);
                     <img src="${product.photo || 'rasgulla.jpg'}" alt="${product.productName}">
                     <div class="product-info">
                         <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
-                        <span class="product-price">₹${product.price}</span>
+                        <span class="product-price" style="color: #2e7d32; font-weight:bold;">₹${product.price || 0}</span>
                         <span class="store-name">🏪 ${product.storeName}</span>
                         <span class="distance">📍 ${distanceTxt}</span>
                         <a href="${googleMapUrl}" target="_blank" class="map-btn">Map on 📍</a>
