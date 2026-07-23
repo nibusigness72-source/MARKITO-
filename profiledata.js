@@ -4,6 +4,7 @@
 
 let currentStoreId = "";
 let clickedProductName = "";
+let clickedProductId = "";
 let currentBoxIndex = "";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,8 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let rawStoreId = urlParams.get('storeId') || urlParams.get('id') || urlParams.get('storeid');
     currentStoreId = rawStoreId ? String(rawStoreId).trim() : "";
     
-    let rawProdName = urlParams.get('prodName') || urlParams.get('productName');
+let rawProdName = urlParams.get('prodName') || urlParams.get('productName');
     clickedProductName = rawProdName ? decodeURIComponent(rawProdName).trim() : "";
+
+    let rawProdId = urlParams.get('prodId');
+    clickedProductId = rawProdId ? decodeURIComponent(rawProdId).trim() : "";
     
     currentBoxIndex = urlParams.get('box') ? String(urlParams.get('box')).trim() : "";
 
@@ -90,7 +94,10 @@ function loadStoreProfileAndProducts() {
                 const prod = productsObj[key];
                 const googleMapUrl = `https://maps.google.com/?q=${lat},${lon}`;
 
-                if (clickedProductName && prod.productName && prod.productName.trim().toLowerCase() === clickedProductName.toLowerCase() && !mainProductFound && highlightSection) {
+                const thisProductId = `${currentStoreId}_${key}`;
+                const isIdMatch = clickedProductId && thisProductId === clickedProductId;
+                const isNameMatch = !clickedProductId && clickedProductName && prod.productName && prod.productName.trim().toLowerCase() === clickedProductName.toLowerCase();
+                if ((isIdMatch || isNameMatch) && !mainProductFound && highlightSection) {
                     highlightSection.innerHTML = `
                         <div class="h-img-box"><img src="${prod.photo || 'rasgulla.jpg'}" alt="${prod.productName}"></div>
                         <div class="h-info-box">
@@ -110,9 +117,10 @@ function loadStoreProfileAndProducts() {
 
                   card.setAttribute('data-storeid', currentStoreId);
     card.setAttribute('data-prodname', prod.productName);
+    card.setAttribute('data-prodid', `${currentStoreId}_${key}`);
                     
                     card.onclick = () => {
-                        window.location.href = `./profile.html?storeId=${currentStoreId}&prodName=${encodeURIComponent(prod.productName)}`;
+                        window.location.href = `./profile.html?storeId=${currentStoreId}&prodId=${encodeURIComponent(currentStoreId + '_' + key)}&prodName=${encodeURIComponent(prod.productName)}`;
                     };
 
                     card.innerHTML = `

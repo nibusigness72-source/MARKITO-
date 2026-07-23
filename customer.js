@@ -175,13 +175,15 @@ const googleMapUrl = `https://www.google.com/maps?q=${product.lat},${product.lon
                 <div class="product-info">
                     <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
                     <span class="product-price">₹${product.price}</span>
-<span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
+<span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="event.stopPropagation(); openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
 
                     <span class="distance">📍 ${distanceTxt}</span>
                     <a href="${googleMapUrl}" target="_blank" class="map-btn">Map on 📍</a>
                 </div>
             `;
-
+productCard.onclick = () => {
+                window.location.href = `./profile.html?storeId=${product.storeId}&prodId=${encodeURIComponent(product.productId)}&prodName=${encodeURIComponent(product.productName)}`;
+            };
             targetSection.appendChild(productCard);
             itemsInCurrentSection++;
     });
@@ -493,7 +495,7 @@ if (!tagMatch && !nameMatch) return false;  // ✅ Tags ko priority!
     });
 
     // सबसे सस्ता सामान पहले
-    // Search result ko rank ke hisab se sort karo
+      // Search result ko rank ke hisab se sort karo
 
 // Search result ko rank ke hisab se sort karo
 filteredResults.sort((a, b) => {
@@ -526,12 +528,14 @@ filteredResults.sort((a, b) => {
                 <img src="${product.photo || 'rasgulla.jpg'}" alt="${product.productName}">
                 <div class="product-info">
                     <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
-                    <span class="product-price" style="color: #2e7d32; font-weight:bold;">₹${product.price}</span>
-                    <span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
+                    <span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="event.stopPropagation(); openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
                     <span class="distance">📍 ${distanceTxt}</span>
                     <a href="${googleMapUrl}" target="_blank" class="map-btn">Map on 📍</a>
                 </div>
             `;
+          productCard.onclick = () => {
+                window.location.href = `./profile.html?storeId=${product.storeId}&prodId=${encodeURIComponent(product.productId)}&prodName=${encodeURIComponent(product.productName)}`;
+            };
             sections[0].appendChild(productCard);
         });
         return;
@@ -557,12 +561,15 @@ productCard.setAttribute('data-prodname', product.productName);
                 <h3 class="product-name">${product.productName} (${product.unit || '1kg'})</h3>
                 <span class="product-price" style="color: #2e7d32; font-weight:bold;">₹${product.price}</span>
                
-<span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
+<span class="store-name" style="cursor:pointer; color:#4285f4; font-weight:bold;" onclick="event.stopPropagation(); openSingleStorePageByUID('${product.storeId}', '${product.storeName}')">🏪 ${product.storeName}</span>
 
                 <span class="distance">📍 ${distanceTxt}</span>
                 <a href="${googleMapUrl}" target="_blank" class="map-btn">Map on 📍</a>
             </div>
         `;
+      productCard.onclick = () => {
+            window.location.href = `./profile.html?storeId=${product.storeId}&prodId=${encodeURIComponent(product.productId)}&prodName=${encodeURIComponent(product.productName)}`;
+        };
         sections[0].appendChild(productCard);
     });
 // [B] बिना हेडिंग के चुपचाप उसी कैटेगरी का बाकी सामान नीचे लोड करो
